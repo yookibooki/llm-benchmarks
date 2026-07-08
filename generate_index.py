@@ -26,15 +26,50 @@ def main():
         for row in reader:
             models.append(row)
 
+    # Sort by intelligence index descending (highest first)
+    def sort_key(row):
+        val = intelligence.get(row["name"], "0")
+        try:
+            return -float(val)
+        except (ValueError, TypeError):
+            return 0
+
+    models.sort(key=sort_key)
+
     # Build table rows
     rows_html = []
     for row in models:
         name = row["name"]
         intel = intelligence.get(name, "-")
-        ttft = row["ttft"]
-        tps = row["tps"]
+        ttft_raw = row["ttft"]
+        tps_raw = row["tps"]
+
+        # Format intelligence
+        try:
+            intel_fmt = f"{float(intel):.2f}"
+        except (ValueError, TypeError):
+            intel_fmt = "-"
+
+        # Convert TTFT from ms to seconds
+        if ttft_raw == "-":
+            ttft_fmt = "-"
+        else:
+            try:
+                ttft_fmt = f"{float(ttft_raw) / 1000:.2f}"
+            except (ValueError, TypeError):
+                ttft_fmt = "-"
+
+        # Format TPS
+        if tps_raw == "-":
+            tps_fmt = "-"
+        else:
+            try:
+                tps_fmt = f"{float(tps_raw):.2f}"
+            except (ValueError, TypeError):
+                tps_fmt = "-"
+
         rows_html.append(
-            f'<tr><td>{name}</td><td>{intel}</td><td>{ttft}</td><td>{tps}</td></tr>'
+            f"<tr><td>{name}</td><td>{intel_fmt}</td><td>{ttft_fmt}</td><td>{tps_fmt}</td></tr>"
         )
 
     html = f"""<!DOCTYPE html>
@@ -42,7 +77,7 @@ def main():
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NVIDIA NIM Benchmarks</title>
+<title>NVIDIA NIM Models Benchmarks</title>
 <style>
 body {{ background: #1a1a1a; color: #e0e0e0; font-family: system-ui, sans-serif; margin: 0; padding: 2rem; overflow-x: hidden; }}
 h1 {{ text-align: center; margin-bottom: 1.5rem; }}
@@ -63,13 +98,13 @@ th.asc .arrow::after, th.desc .arrow::before {{ opacity: 0.2; }}
 </style>
 </head>
 <body>
-<h1>NVIDIA NIM Benchmarks</h1>
+<h1>NVIDIA NIM Models Benchmarks</h1>
 <table>
 <thead>
-<tr><th>Model <span class="arrow"></span></th><th>Intelligence <span class="arrow"></span></th><th>TTFT (ms) <span class="arrow"></span></th><th>TPS <span class="arrow"></span></th></tr>
+<tr><th>Model <span class="arrow"></span></th><th>Index <span class="arrow"></span></th><th>TTFT (s) <span class="arrow"></span></th><th>TPS <span class="arrow"></span></th></tr>
 </thead>
 <tbody>
-{"".join(rows_html)}
+{chr(10).join(rows_html)}
 </tbody>
 </table>
 <p style="text-align:center;margin-top:1rem;"><a href="https://yookibooki.github.io/nvidia-nim-benchmarks">Results published at yookibooki.github.io/nvidia-nim-benchmarks</a></p>

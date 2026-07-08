@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NVIDIA NIM Benchmarks</title>
+<title>NVIDIA NIM Models Benchmarks</title>
 <style>
 body { background: #1a1a1a; color: #e0e0e0; font-family: system-ui, sans-serif; margin: 0; padding: 2rem; overflow-x: hidden; }
 h1 { text-align: center; margin-bottom: 1.5rem; }
@@ -24,13 +24,57 @@ th.asc .arrow::after, th.desc .arrow::before { opacity: 0.2; }
 </style>
 </head>
 <body>
-<h1>NVIDIA NIM Benchmarks</h1>
+<h1>NVIDIA NIM Models Benchmarks</h1>
 <table>
 <thead>
-<tr><th>Model <span class="arrow"></span></th><th>Intelligence <span class="arrow"></span></th><th>TTFT (ms) <span class="arrow"></span></th><th>TPS <span class="arrow"></span></th></tr>
+<tr><th>Model <span class="arrow"></span></th><th>Index <span class="arrow"></span></th><th>TTFT (s) <span class="arrow"></span></th><th>TPS <span class="arrow"></span></th></tr>
 </thead>
 <tbody>
-<tr><td>openai/gpt-oss-120b</td><td>23.8</td><td>1602</td><td>148.6</td></tr><tr><td>nvidia/nemotron-3-nano-30b-a3b</td><td>-</td><td>1500</td><td>64.3</td></tr><tr><td>nvidia/nemotron-3-nano-omni-30b-a3b-reasoning</td><td>-</td><td>9760</td><td>51.8</td></tr><tr><td>stepfun-ai/step-3.5-flash</td><td>-</td><td>3287</td><td>16.0</td></tr><tr><td>stepfun-ai/step-3.7-flash</td><td>-</td><td>16856</td><td>4.2</td></tr><tr><td>openai/gpt-oss-20b</td><td>14.9</td><td>3154</td><td>30.1</td></tr><tr><td>mistralai/mistral-small-4-119b-2603</td><td>-</td><td>1471</td><td>110.0</td></tr><tr><td>nvidia/nvidia-nemotron-nano-9b-v2</td><td>7.4</td><td>6428</td><td>5.5</td></tr><tr><td>nvidia/nemotron-3-ultra-550b-a55b</td><td>-</td><td>5586</td><td>11.6</td></tr><tr><td>sarvamai/sarvam-m</td><td>-</td><td>1665</td><td>32.6</td></tr><tr><td>google/diffusiongemma-26b-a4b-it</td><td>-</td><td>-</td><td>-</td></tr><tr><td>minimaxai/minimax-m2.7</td><td>-</td><td>14759</td><td>40.6</td></tr><tr><td>abacusai/dracarys-llama-3.1-70b-instruct</td><td>-</td><td>1285</td><td>19.4</td></tr><tr><td>bytedance/seed-oss-36b-instruct</td><td>-</td><td>213676</td><td>2.5</td></tr><tr><td>deepseek-ai/deepseek-v4-flash</td><td>-</td><td>2571</td><td>5.8</td></tr><tr><td>deepseek-ai/deepseek-v4-pro</td><td>-</td><td>5665</td><td>5.7</td></tr><tr><td>google/gemma-2-2b-it</td><td>-</td><td>945</td><td>111.6</td></tr><tr><td>google/gemma-3n-e2b-it</td><td>-</td><td>-</td><td>-</td></tr><tr><td>google/gemma-3n-e4b-it</td><td>-</td><td>-</td><td>-</td></tr><tr><td>google/gemma-4-31b-it</td><td>-</td><td>2988</td><td>3.3</td></tr><tr><td>meta/llama-3.1-70b-instruct</td><td>-</td><td>1160</td><td>18.7</td></tr><tr><td>meta/llama-3.1-8b-instruct</td><td>-</td><td>703</td><td>119.7</td></tr><tr><td>meta/llama-3.2-1b-instruct</td><td>-</td><td>-</td><td>-</td></tr><tr><td>meta/llama-3.2-3b-instruct</td><td>-</td><td>-</td><td>-</td></tr><tr><td>meta/llama-3.3-70b-instruct</td><td>-</td><td>-</td><td>-</td></tr><tr><td>meta/llama-4-maverick-17b-128e-instruct</td><td>-</td><td>887</td><td>51.0</td></tr><tr><td>microsoft/phi-4-mini-instruct</td><td>-</td><td>-</td><td>-</td></tr><tr><td>minimaxai/minimax-m3</td><td>-</td><td>-</td><td>-</td></tr><tr><td>mistralai/ministral-14b-instruct-2512</td><td>-</td><td>879</td><td>79.3</td></tr><tr><td>mistralai/mistral-large-3-675b-instruct-2512</td><td>-</td><td>939</td><td>122.7</td></tr><tr><td>mistralai/mistral-medium-3.5-128b</td><td>-</td><td>31347</td><td>46.8</td></tr><tr><td>mistralai/mistral-nemotron</td><td>-</td><td>1534</td><td>49.8</td></tr><tr><td>mistralai/mixtral-8x7b-instruct-v0.1</td><td>-</td><td>3944</td><td>28.1</td></tr><tr><td>moonshotai/kimi-k2.6</td><td>-</td><td>-</td><td>-</td></tr><tr><td>nvidia/llama-3.1-nemotron-nano-8b-v1</td><td>-</td><td>-</td><td>-</td></tr><tr><td>nvidia/llama-3.3-nemotron-super-49b-v1</td><td>-</td><td>4219</td><td>1.7</td></tr><tr><td>nvidia/llama-3.3-nemotron-super-49b-v1.5</td><td>-</td><td>24262</td><td>3.0</td></tr><tr><td>nvidia/nemotron-3-super-120b-a12b</td><td>-</td><td>15881</td><td>26.4</td></tr><tr><td>nvidia/nemotron-mini-4b-instruct</td><td>-</td><td>1096</td><td>102.0</td></tr><tr><td>qwen/qwen3-next-80b-a3b-instruct</td><td>-</td><td>12506</td><td>1.4</td></tr><tr><td>qwen/qwen3.5-122b-a10b</td><td>-</td><td>11867</td><td>2.4</td></tr><tr><td>qwen/qwen3.5-397b-a17b</td><td>-</td><td>23354</td><td>1.5</td></tr><tr><td>stockmark/stockmark-2-100b-instruct</td><td>-</td><td>942</td><td>25.4</td></tr><tr><td>upstage/solar-10.7b-instruct</td><td>-</td><td>912</td><td>33.7</td></tr><tr><td>z-ai/glm-5.2</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>openai/gpt-oss-120b</td><td>23.80</td><td>1.60</td><td>148.60</td></tr>
+<tr><td>openai/gpt-oss-20b</td><td>14.90</td><td>3.15</td><td>30.10</td></tr>
+<tr><td>nvidia/nvidia-nemotron-nano-9b-v2</td><td>7.40</td><td>6.43</td><td>5.50</td></tr>
+<tr><td>nvidia/nemotron-3-nano-30b-a3b</td><td>-</td><td>1.50</td><td>64.30</td></tr>
+<tr><td>nvidia/nemotron-3-nano-omni-30b-a3b-reasoning</td><td>-</td><td>9.76</td><td>51.80</td></tr>
+<tr><td>stepfun-ai/step-3.5-flash</td><td>-</td><td>3.29</td><td>16.00</td></tr>
+<tr><td>stepfun-ai/step-3.7-flash</td><td>-</td><td>16.86</td><td>4.20</td></tr>
+<tr><td>mistralai/mistral-small-4-119b-2603</td><td>-</td><td>1.47</td><td>110.00</td></tr>
+<tr><td>nvidia/nemotron-3-ultra-550b-a55b</td><td>-</td><td>5.59</td><td>11.60</td></tr>
+<tr><td>sarvamai/sarvam-m</td><td>-</td><td>1.67</td><td>32.60</td></tr>
+<tr><td>google/diffusiongemma-26b-a4b-it</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>minimaxai/minimax-m2.7</td><td>-</td><td>14.76</td><td>40.60</td></tr>
+<tr><td>abacusai/dracarys-llama-3.1-70b-instruct</td><td>-</td><td>1.28</td><td>19.40</td></tr>
+<tr><td>bytedance/seed-oss-36b-instruct</td><td>-</td><td>213.68</td><td>2.50</td></tr>
+<tr><td>deepseek-ai/deepseek-v4-flash</td><td>-</td><td>2.57</td><td>5.80</td></tr>
+<tr><td>deepseek-ai/deepseek-v4-pro</td><td>-</td><td>5.67</td><td>5.70</td></tr>
+<tr><td>google/gemma-2-2b-it</td><td>-</td><td>0.94</td><td>111.60</td></tr>
+<tr><td>google/gemma-3n-e2b-it</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>google/gemma-3n-e4b-it</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>google/gemma-4-31b-it</td><td>-</td><td>2.99</td><td>3.30</td></tr>
+<tr><td>meta/llama-3.1-70b-instruct</td><td>-</td><td>1.16</td><td>18.70</td></tr>
+<tr><td>meta/llama-3.1-8b-instruct</td><td>-</td><td>0.70</td><td>119.70</td></tr>
+<tr><td>meta/llama-3.2-1b-instruct</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>meta/llama-3.2-3b-instruct</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>meta/llama-3.3-70b-instruct</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>meta/llama-4-maverick-17b-128e-instruct</td><td>-</td><td>0.89</td><td>51.00</td></tr>
+<tr><td>microsoft/phi-4-mini-instruct</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>minimaxai/minimax-m3</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>mistralai/ministral-14b-instruct-2512</td><td>-</td><td>0.88</td><td>79.30</td></tr>
+<tr><td>mistralai/mistral-large-3-675b-instruct-2512</td><td>-</td><td>0.94</td><td>122.70</td></tr>
+<tr><td>mistralai/mistral-medium-3.5-128b</td><td>-</td><td>31.35</td><td>46.80</td></tr>
+<tr><td>mistralai/mistral-nemotron</td><td>-</td><td>1.53</td><td>49.80</td></tr>
+<tr><td>mistralai/mixtral-8x7b-instruct-v0.1</td><td>-</td><td>3.94</td><td>28.10</td></tr>
+<tr><td>moonshotai/kimi-k2.6</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>nvidia/llama-3.1-nemotron-nano-8b-v1</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>nvidia/llama-3.3-nemotron-super-49b-v1</td><td>-</td><td>4.22</td><td>1.70</td></tr>
+<tr><td>nvidia/llama-3.3-nemotron-super-49b-v1.5</td><td>-</td><td>24.26</td><td>3.00</td></tr>
+<tr><td>nvidia/nemotron-3-super-120b-a12b</td><td>-</td><td>15.88</td><td>26.40</td></tr>
+<tr><td>nvidia/nemotron-mini-4b-instruct</td><td>-</td><td>1.10</td><td>102.00</td></tr>
+<tr><td>qwen/qwen3-next-80b-a3b-instruct</td><td>-</td><td>12.51</td><td>1.40</td></tr>
+<tr><td>qwen/qwen3.5-122b-a10b</td><td>-</td><td>11.87</td><td>2.40</td></tr>
+<tr><td>qwen/qwen3.5-397b-a17b</td><td>-</td><td>23.35</td><td>1.50</td></tr>
+<tr><td>stockmark/stockmark-2-100b-instruct</td><td>-</td><td>0.94</td><td>25.40</td></tr>
+<tr><td>upstage/solar-10.7b-instruct</td><td>-</td><td>0.91</td><td>33.70</td></tr>
+<tr><td>z-ai/glm-5.2</td><td>-</td><td>-</td><td>-</td></tr>
 </tbody>
 </table>
 <p style="text-align:center;margin-top:1rem;"><a href="https://yookibooki.github.io/nvidia-nim-benchmarks">Results published at yookibooki.github.io/nvidia-nim-benchmarks</a></p>
