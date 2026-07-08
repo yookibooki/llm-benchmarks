@@ -1,20 +1,11 @@
-"""
-Pulls the live model list from NVIDIA NIM, drops known non-chat model
-families by name, probes survivors with a minimal request, and writes
-the survivors to _data/models.txt (one id per line, no header).
-
-Also writes _data/endpoint_snapshot.json containing a hash of the full
-live catalog, so daily.yml can detect when the catalog changed and only
-re-run this filter then.
-
-Runs weekly via .github/workflows/filter-models.yml, and is also invoked
-automatically by daily.yml when the catalog hash changes.
-"""
+"""Probe live NVIDIA NIM models, drop non-chat ones, write survivors to data/models.txt."""
 
 import hashlib
 import json
 import os
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import httpx
 from dotenv import load_dotenv
@@ -25,10 +16,19 @@ NVIDIA_API_KEY = os.environ["NVIDIA_API_KEY"]
 BASE_URL = "https://integrate.api.nvidia.com/v1"
 MODELS_URL = f"{BASE_URL}/models"
 CHAT_URL = f"{BASE_URL}/chat/completions"
-OUTPUT_PATH = "_data/models.txt"
-SNAPSHOT_PATH = "_data/endpoint_snapshot.json"
+OUTPUT_PATH = "data/models.txt"
+SNAPSHOT_PATH = "data/endpoint_snapshot.json"
+
+EXCLUDE_IDS = {
+    "google/gemma-3n-e4b-it",
+    "google/gemma-3n-e2b-it",
+    "microsoft/phi-4-mini-instruct",
+}
 
 EXCLUDE_TERMS = [
+    "-1b-",
+    "-2b-",
+    "-3b-",
     "embed",
     "image",
     "vision",
@@ -61,13 +61,13 @@ HEADERS = {"Authorization": f"Bearer {NVIDIA_API_KEY}"}
 
 
 def model_list_hash(model_ids: list[str]) -> str:
-    """Stable hash of the full live catalog; changes when any model is added/removed."""
+    """Stable hash of the catalog for change detection."""
     normalized = "\n".join(sorted(model_ids))
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
 def write_snapshot(model_ids: list[str]) -> None:
-    """Persist a hash of the live catalog so daily.yml can detect changes."""
+    """Persist catalog hash for daily.yml change detection."""
     snapshot = {
         "hash": model_list_hash(model_ids),
         "count": len(model_ids),
@@ -86,12 +86,14 @@ def fetch_model_ids() -> list[str]:
 
 
 def name_filter(model_id: str) -> bool:
-    """Return True if model_id should be KEPT (does not match exclude terms)."""
+    """Return True if model should be kept."""
+    if model_id in EXCLUDE_IDS:
+        return False
     lower = model_id.lower()
     return not any(term in lower for term in EXCLUDE_TERMS)
 
 
-def probe_model(model_id: str, client: httpx.Client) -> bool:
+def probe_model(model_id: str) -> bool:
     """Return True unless the model returns 404."""
     payload = {
         "model": model_id,
@@ -99,14 +101,18 @@ def probe_model(model_id: str, client: httpx.Client) -> bool:
         "max_tokens": 1,
     }
     try:
-        resp = client.post(CHAT_URL, headers=HEADERS, json=payload, timeout=30)
+        with httpx.Client() as client:
+            resp = client.post(CHAT_URL, headers=HEADERS, json=payload, timeout=10)
     except httpx.RequestError as e:
         print(f"  [warn] {model_id}: request error ({e}), keeping", file=sys.stderr)
         return True
 
     if resp.status_code == 404:
         return False
-    if resp.status_code >= 400:
+    if resp.status_code == 429:
+        time.sleep(1)
+        print(f"  [warn] {model_id}: rate-limited, keeping", file=sys.stderr)
+    elif resp.status_code >= 400:
         print(
             f"  [warn] {model_id}: probe returned {resp.status_code}, keeping",
             file=sys.stderr,
@@ -126,9 +132,11 @@ def main() -> None:
     print(f"  {len(name_filtered)} survive name filter")
 
     survivors = []
-    with httpx.Client() as client:
-        for model_id in name_filtered:
-            if probe_model(model_id, client):
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        futures = {pool.submit(probe_model, model_id): model_id for model_id in name_filtered}
+        for future in as_completed(futures):
+            model_id = futures[future]
+            if future.result():
                 survivors.append(model_id)
             else:
                 print(f"  dropping {model_id} (404)")

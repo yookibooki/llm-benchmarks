@@ -1,11 +1,12 @@
 [project]
 name = "nvidia-nim-benchmarks"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+description = "Benchmarks NIM chat models for TPS, renders static leaderboard."
 requires-python = ">=3.14"
 dependencies = [
     "httpx",
     "python-dotenv",
-    "huggingface-hub",
 ]
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
