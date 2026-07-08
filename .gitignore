@@ -2,3 +2,5 @@
 __pycache__/
 .venv/
 data/aa_raw.json
+build/
+nvidia_nim_benchmarks.egg-info/
