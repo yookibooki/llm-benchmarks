@@ -1,2 +1,1 @@
 stepfun/step-3.7-flash:free
-tencent/hy3:free

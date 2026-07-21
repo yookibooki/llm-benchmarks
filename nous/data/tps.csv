@@ -1,3 +1,2 @@
 Model,Provider,Intelligence,Latency,TPS
-stepfun/step-3.7-flash:free,nous,31,4,294
-tencent/hy3:free,nous,42,-,-
+stepfun/step-3.7-flash:free,nous,31,6,201
