@@ -23,9 +23,15 @@ MANUAL_OVERRIDES: dict[str, str] = {
 }
 
 
+MANUAL_INTELLIGENCE: dict[str, int] = {
+    "laguna-s-2.1-free": 40,
+}
+
+
 if __name__ == "__main__":
     match_provider(
         "opencode/data/tps.csv",
         normalize=normalize_slug,
         overrides=MANUAL_OVERRIDES,
+        manual_intel=MANUAL_INTELLIGENCE,
     )
