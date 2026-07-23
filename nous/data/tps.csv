@@ -1,5 +1,2 @@
 Model,Provider,Intelligence,Latency,TPS
-poolside/laguna-s-2.1:free,nous,,-,-
-poolside/laguna-xs-2.1:free,nous,,-,-
 stepfun/step-3.7-flash:free,nous,31,6,255
-tencent/hy3:free,nous,42,-,-

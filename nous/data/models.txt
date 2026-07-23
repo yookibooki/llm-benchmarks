@@ -1,4 +1,1 @@
-poolside/laguna-s-2.1:free
-poolside/laguna-xs-2.1:free
 stepfun/step-3.7-flash:free
-tencent/hy3:free

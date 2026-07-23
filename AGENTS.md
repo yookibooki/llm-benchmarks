@@ -1,113 +1,136 @@
 # llm-benchmarks
 
 Auto leaderboard: https://yookibooki.github.io/llm-benchmarks
-Benchmarks LLM providers for tokens-per-second (TPS) + latency, then merges each
-model's Artificial Analysis (AA) intelligence score and renders a static
-leaderboard (`index.html`). Driven daily by GitHub Actions.
+Benchmarks LLM providers for TPS + latency, merges Artificial Analysis (AA)
+intelligence scores, renders `index.html`. Driven daily by GitHub Actions.
 
-> Run scripts with `python3 path/to/script.py` (deps: `httpx`, `openai`,
-> `python-dotenv`). Each provider script adds the repo root to `sys.path` so
-> `import shared.*` works.
+## Quick start
 
-## Tree
-
+```bash
+python3 -m pip install -r requirements.txt
+python3 openrouter/filter_models.py   # fetch model list
+python3 openrouter/run_benchmark.py   # benchmark all models
+python3 openrouter/tps-aa_matcher.py  # merge AA intelligence
+python3 gen_html.py                   # rebuild leaderboard
 ```
-AGENTS.md, gen_html.py, index.html, LICENSE, .gitignore, .nojekyll
-data/aa_raw.json, data/tps.csv              (shared - merged leaderboard)
-shared/                                     (shared Python package)
-  benchmark.py                              (streaming TPS/latency measurement)
-  config.py                                 (repo root + API key helper)
-  csv_utils.py                              (read/write/merge benchmark CSVs)
-  filter.py                                 (snapshot-gated model filtering)
-  matcher.py                                (merge AA intelligence into tps.csv)
-  provider.py                               (PROVIDERS registry + run harness)
-  snapshot.py                               (endpoint catalog snapshot/hash)
-nvidia/ openrouter/ google/ mistral/ opencode/ nous/   (one per provider)
-.github/workflows/daily.yml
-```
+
+## Pipeline (`.github/workflows/daily.yml`)
+
+All 6 providers run in parallel via background `&` processes, guarded with
+`|| echo "WARNING: ..."` (one failure doesn't block others).
+
+Step order per provider: **filter → benchmark → match** → then `gen_html.py`
+merges every `data/tps.csv` into `data/tps.csv`, renders `index.html`, commits
+and deploys to GitHub Pages.
 
 ## Provider structure
 
-Each provider directory contains three thin scripts plus its own `data/`:
+Each `provider/` has three scripts + `data/`:
 
-- `filter_models.py` — fetches the available models, applies provider-specific
-  excludes, and writes `data/models.txt`. Uses a `data/endpoint_snapshot.json`
-  hash gate so unchanged catalogs are skipped.
-- `run_benchmark.py` — a one-line wrapper calling
-  `shared.provider.run_provider_benchmark(provider="...")`, which reads
-  `data/models.txt`, benchmarks each model, and writes `data/tps.csv`.
-- `tps-aa_matcher.py` — calls `shared.matcher.match_provider(...)` to fill the
-  `Intelligence` column of `data/tps.csv` from `data/aa_raw.json`. Each provider
-  supplies its own `normalize_slug`, `MANUAL_OVERRIDES`, `MANUAL_INTELLIGENCE`,
-  and (for namespaced providers) `expected_creator`.
-- `data/` — provider-local state: `models.txt`, `tps.csv`, `endpoint_snapshot.json`.
+- `filter_models.py` — fetches available models from the API, applies
+  provider-specific exclusions, writes `data/models.txt`.
+- `run_benchmark.py` — one-liner calling `shared.provider.run_provider_benchmark(provider="...")`.
+- `tps-aa_matcher.py` — calls `shared.matcher.match_provider(...)` to fill
+  the `Intelligence` column from `data/aa_raw.json`.
+- `data/` — generated state: `models.txt`, `tps.csv`, `endpoint_snapshot.json`.
 
-## Provider registry
+### Adding a provider
 
-All providers are registered once in `shared/provider.py` (`PROVIDERS` dict),
-keyed by directory name, each with `base_url`, `api_env_var`, and `api_kind`
-(`"chat"` or `"responses"`). `gen_html.py` imports this registry to know which
-provider data dirs to merge. **Adding a provider requires updating `PROVIDERS`
-there** — it is no longer configured in `gen_html.py`.
+1. Create `new-provider/` with the three scripts (copy an existing one).
+2. Register in `shared/provider.py` (`PROVIDERS` dict: `base_url`, `api_env_var`,
+   `api_kind`).
+3. Add the secret to repo + `.github/workflows/daily.yml` env block + provider
+   name to each `for prov in ...` loop.
 
-## Adding a new provider
+## WARNING: data files are generated, not source
 
-1. Create `new-provider/` with `filter_models.py`, `run_benchmark.py`,
-   `tps-aa_matcher.py` (copy an existing provider and adapt the filter/matcher).
-2. Register it in `PROVIDERS` in `shared/provider.py` (base_url, api_env_var,
-   api_kind).
-3. Add the `API_ENV_VAR` secret to the repo and to the `env:` block in
-   `.github/workflows/daily.yml`.
-4. Add the provider directory name to the `for prov in ...` loop in each step
-   of the `benchmark` job in `.github/workflows/daily.yml`.
+**Never edit `data/models.txt`, `data/tps.csv`, or `data/endpoint_snapshot.json`
+directly.** They are overwritten every pipeline run:
 
-## Pipeline (daily.yml)
+| File | Overwritten by |
+|---|---|
+| `models.txt` | `filter_models.py` — fetches API catalog, applies exclude terms, rewrites file |
+| `tps.csv` | `run_benchmark.py` (new benchmarks) then `tps-aa_matcher.py` (intelligence merge) |
+| `endpoint_snapshot.json` | `filter_models.py` as a side effect of `gate_and_write` |
 
-1. Cron trigger (daily at 17:00 UTC) or manual `workflow_dispatch`.
-   Concurrency group `daily-benchmark` cancels in-progress runs.
-2. A single runner runs all 6 providers **in parallel** (background processes
-   per provider, joined with `wait`). Each provider goes through
-   filter→benchmark→match in its own step — all providers filter concurrently,
-   then all benchmark concurrently, then all match concurrently. Within each
-   provider, models are benchmarked sequentially (one at a time).
-   A failing provider does **not** block the others — each `python3`
-   invocation is guarded with `|| echo "WARNING: ..."`.
-3. After all providers complete, `gen_html.py` merges every `data/tps.csv`
-   into `data/tps.csv`, renders `index.html`, commits, and deploys.
+The hash gate (`shared/filter.py`) skips rewriting `models.txt` only when the
+API catalog's SHA-256 hash matches the stored snapshot. If the snapshot file is
+**missing or deleted**, the next run treats the catalog as changed and
+**regenerates everything**. To persist a change, modify the Python scripts, not
+the data files.
 
-## Shared data
+Shared `data/tps.csv` and `index.html` are also auto-generated — edit
+`gen_html.py` instead.
 
-- `data/aa_raw.json` — Artificial Analysis model list with intelligence index
-  and creator slugs; source for the `Intelligence` column (shared by all
-  providers).
-- `data/tps.csv` — merged leaderboard: columns
-  `Model, Provider, Intelligence, Latency, TPS` (`-` = no value).
+### How to persist model changes
 
-## How benchmarking works (`shared/benchmark.py`)
+- **Filter a model out** → add an exclude term to `filter_models.py`'s `EXCLUDE_TERMS`.
+- **Add a model** → models must be returned by the API AND pass `name_filter()` —
+  adjust the filter logic if needed.
+- **Override AA slug matching** → add to `MANUAL_OVERRIDES` in `tps-aa_matcher.py`.
+- **Set intelligence manually** (no AA match) → add to `MANUAL_INTELLIGENCE` in
+  `tps-aa_matcher.py`.
+- **Change latency/TPS** → not possible manually; must re-run the benchmark.
 
-For each model it streams a fixed known prompt and measures:
-- **Latency** — seconds to first token.
-- **TPS** — chars generated ÷ streaming duration (characters per second).
-  Hard timeout 8s, total timeout 40s (SIGALRM guarded). Failures are recorded
-  with an error reason per model.
+Examples of correct persistence: `7e070b6` added
+`poolside/laguna-s-2.1:free` → 40 intelligence via `MANUAL_INTELLIGENCE` in
+both `opencode/tps-aa_matcher.py` and `openrouter/tps-aa_matcher.py`, and
+`poolside/laguna-xs-2.1` → 15 via `nvidia/tps-aa_matcher.py`.
 
-## Fetch AA data
+## `:free` suffix convention by provider
 
+Each provider uses `:free` differently — check the filter logic:
+
+| Provider | `:free` handling |
+|---|---|
+| **OpenRouter** | API returns only $0 models; `models.txt` entries naturally have `:free` |
+| **Nous** | `name_filter` rejects models NOT ending in `:free` |
+| **OpenCode** | `name_filter` accepts models ending in `-free` (not `:free`) |
+| **NVIDIA** | No `:free` filtering; all returned models included |
+| **Google / Mistral** | API-determined; no special `:free` suffix filtering |
+
+The `tps-aa_matcher.py` `normalize_slug` strips `:free`/`-free`/`-it`/`-instruct`
+before matching AA slugs.
+
+## Provider quirks
+
+- **NVIDIA** has a 404-validation step (`remove_404_models`) that pings each
+  model before including it.
+- **NVIDIA** uses `strip_namespace=True` + `expected_creator` for creator
+  verification against AA.
+- **OpenRouter** passes `HTTP-Referer` header and excludes small model patterns
+  (`-1b-`, `-2b-`, etc.) via `SMALL_MODEL_PATTERNS`.
+
+## Intelligence matching (`shared/matcher.py`)
+
+Match priority (top wins):
+1. `MANUAL_INTELLIGENCE` — hardcoded score; no AA lookup.
+2. `MANUAL_OVERRIDES` — maps model ID to AA slug for lookup.
+3. Normalized slug lookup in AA index.
+
+AA data is fetched separately and stored in `data/aa_raw.json`:
 ```bash
-curl -H "x-api-key: $AA_API_KEY" https://artificialanalysis.ai/api/v2/data/llms/models -o data/aa_raw.json
+curl -H "x-api-key: $AA_API_KEY" \
+  https://artificialanalysis.ai/api/v2/data/llms/models -o data/aa_raw.json
 ```
 
-`shared/matcher.py` reads `data/aa_raw.json` → `["data"]`, indexes by `slug`,
-keeps the highest `artificial_analysis_intelligence_index`, and matches each
-`Model` via slug normalization, `MANUAL_OVERRIDES`, or `MANUAL_INTELLIGENCE`,
-optionally verifying the AA `creator` slug.
+## Benchmark details (`shared/benchmark.py`)
+
+- Prompt: 60× repeated "The quick brown fox..." (character consistency test).
+- **Latency** = seconds to first token.
+- **TPS** = estimated tokens / streaming duration (chars / 4 ÷ seconds).
+- Timeouts: hard 8s (first token), total 45s (SIGALRM).
+- Uses `openai` Python client with streaming.
+- `api_kind` controls `chat.completions` vs `responses` API.
 
 ## Conventions
 
-- API keys come from environment variables / repo secrets (`NVIDIA_API_KEY`,
-  `OPENROUTER_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENCODE_API_KEY`,
-  `NOUS_API_KEY`) — there are no per-provider `.env` files in the repo.
-- Provider scripts self-register on `sys.path` (`sys.path.insert(0, repo_root)`)
-  before importing `shared`.
-- Keep `shared/` provider-agnostic; provider-specific logic (excludes,
-  normalization, overrides) belongs in each provider's scripts.
+- API keys from env vars / repo secrets only (no `.env` files per provider).
+- Provider scripts insert repo root in `sys.path` before importing `shared.*`.
+- `shared/` must stay provider-agnostic; provider-specific logic (excludes,
+  normalization, overrides) lives in each provider's scripts.
+
+## Adding to the CI provider list
+
+The 6-provider loop appears in 3 places in `daily.yml` (filter, benchmark,
+match). All 3 must be updated.

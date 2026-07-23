@@ -13,6 +13,7 @@ EXCLUDE_TERMS = [
     "embed", "rerank", "moderation", "tts", "stt", "whisper", "dall-e",
     "stable-diffusion", "midjourney", "content-safety", "safety", "guard",
     "lyria", "clip", "audio", "music", "safeguard",
+    "poolside/laguna",
 ]
 
 

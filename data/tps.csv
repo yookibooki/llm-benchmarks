@@ -41,7 +41,6 @@ z-ai/glm-5.2,nvidia,52,-,-
 cohere/north-mini-code:free,openrouter,20,2,153
 google/gemma-4-26b-a4b-it:free,openrouter,26,0,17
 google/gemma-4-31b-it:free,openrouter,30,-,-
-inclusionai/ling-3.0-flash,openrouter,,-,-
 nvidia/nemotron-3-nano-30b-a3b:free,openrouter,8,-,-
 nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free,openrouter,15,2,208
 nvidia/nemotron-3-super-120b-a12b:free,openrouter,26,-,-
@@ -98,7 +97,4 @@ laguna-s-2.1-free,opencode,40,-,-
 mimo-v2.5-free,opencode,43,3,80
 nemotron-3-ultra-free,opencode,38,-,-
 north-mini-code-free,opencode,20,-,-
-poolside/laguna-s-2.1:free,nous,,-,-
-poolside/laguna-xs-2.1:free,nous,,-,-
 stepfun/step-3.7-flash:free,nous,31,6,255
-tencent/hy3:free,nous,42,-,-
