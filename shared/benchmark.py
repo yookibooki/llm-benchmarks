@@ -1,9 +1,9 @@
-import signal
+import threading
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import Callable
 
-import httpcore
 from openai import OpenAI
 
 MAX_TOKENS = 4096
@@ -47,23 +47,17 @@ class BenchmarkResult:
         ]
 
 
-class _StreamTimeout(TimeoutError):
-    pass
-
-
-def _alarm_handler(signum, frame) -> None:
-    raise _StreamTimeout("stream exceeded total_timeout")
-
-
 @contextmanager
-def _stream_guard(total_timeout: float):
-    old = signal.signal(signal.SIGALRM, _alarm_handler)
-    signal.alarm(int(total_timeout) + 1)
+def _stream_guard(total_timeout: float, close_fn: Callable[[], None] | None = None):
+    timer = threading.Timer(total_timeout, close_fn) if close_fn else None
+    if timer:
+        timer.daemon = True
+        timer.start()
     try:
         yield
     finally:
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, old)
+        if timer:
+            timer.cancel()
 
 
 def _fail(
@@ -97,7 +91,7 @@ def _run_benchmark(
     chars = 0
 
     try:
-        with _stream_guard(total_timeout):
+        with _stream_guard(total_timeout, close_fn=lambda: stream.close()):
             for event in stream:
                 now = time.monotonic()
 
@@ -128,11 +122,8 @@ def _run_benchmark(
                 last_t = now
                 chars += len(delta)
 
-    except (httpcore.ReadTimeout, _StreamTimeout) as e:
-        return _fail(model_id, provider, str(e), exc=e)
-
     except Exception as e:
-        return _fail(model_id, provider, f"{type(e).__name__}: {e}", exc=e)
+        return _fail(model_id, provider, str(e), exc=e)
 
     if not chars:
         return _fail(model_id, provider, "No content tokens received")
@@ -168,39 +159,38 @@ def benchmark(
     api_kind: str,
 ) -> BenchmarkResult:
     try:
-        with _stream_guard(TOTAL_TIMEOUT):
-            if api_kind == "responses":
-                stream = client.responses.create(
-                    model=model_id,
-                    input=PROMPT,
-                    stream=True,
-                    max_output_tokens=MAX_TOKENS,
-                )
+        if api_kind == "responses":
+            stream = client.responses.create(
+                model=model_id,
+                input=PROMPT,
+                stream=True,
+                max_output_tokens=MAX_TOKENS,
+            )
 
-                extract_delta = lambda e: (
-                    e.delta
-                    if getattr(e, "type", None) == "response.output_text.delta"
-                    and getattr(e, "delta", None)
-                    else None
-                )
+            extract_delta = lambda e: (
+                e.delta
+                if getattr(e, "type", None) == "response.output_text.delta"
+                and getattr(e, "delta", None)
+                else None
+            )
 
-            else:
-                stream = client.chat.completions.create(
-                    model=model_id,
-                    messages=[{"role": "user", "content": PROMPT}],
-                    stream=True,
-                    max_tokens=MAX_TOKENS,
-                    stream_options={"include_usage": True},
-                )
+        else:
+            stream = client.chat.completions.create(
+                model=model_id,
+                messages=[{"role": "user", "content": PROMPT}],
+                stream=True,
+                max_tokens=MAX_TOKENS,
+                stream_options={"include_usage": True},
+            )
 
-                extract_delta = lambda c: (
-                    c.choices[0].delta.content
-                    if getattr(c, "choices", None)
-                    and c.choices[0].delta.content
-                    else None
-                )
+            extract_delta = lambda c: (
+                c.choices[0].delta.content
+                if getattr(c, "choices", None)
+                and c.choices[0].delta.content
+                else None
+            )
 
-    except (_StreamTimeout, Exception) as e:
+    except Exception as e:
         return _fail(model_id, provider, f"{type(e).__name__}: {e}", exc=e)
 
     return _run_benchmark(
