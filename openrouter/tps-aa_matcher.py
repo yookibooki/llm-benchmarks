@@ -36,10 +36,10 @@ MANUAL_OVERRIDES: dict[str, str | None] = {
 }
 
 MANUAL_INTELLIGENCE: dict[str, int] = {
+    "inclusionai/ling-3.0-flash:free": 37,
     "poolside/laguna-xs-2.1:free": 15,
     "poolside/laguna-m.1:free": 22,
     "poolside/laguna-s-2.1:free": 40,
-    "inclusionai/ling-3.0-flash:free": 40,
 }
 
 
