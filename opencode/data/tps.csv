@@ -1,7 +1,8 @@
 Model,Provider,Intelligence,Latency,TPS
-big-pickle,opencode,34,5,127
-deepseek-v4-flash-free,opencode,41,0,341
+big-pickle,opencode,34,3,97
+deepseek-v4-flash-free,opencode,41,4,259
 laguna-s-2.1-free,opencode,40,-,-
-mimo-v2.5-free,opencode,43,3,125
-nemotron-3-ultra-free,opencode,38,1,239
+ling-3.0-flash-free,opencode,,5,234
+mimo-v2.5-free,opencode,43,6,109
+nemotron-3-ultra-free,opencode,38,0,250
 north-mini-code-free,opencode,20,-,-
