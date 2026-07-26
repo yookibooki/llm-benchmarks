@@ -1,2 +1,3 @@
+inclusionai/ling-3.0-flash:free
 stepfun/step-3.7-flash:free
 tencent/hy3:free
