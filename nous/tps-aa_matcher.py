@@ -21,8 +21,8 @@ MANUAL_OVERRIDES: dict[str, str] = {
     "tencent/hy3:free": "hy3",
 }
 MANUAL_INTELLIGENCE: dict[str, int] = {
-    "inclusionai/ling-3.0-flash:free": 35,
-    "poolside/laguna-s-2.1:free": 35,
+    "inclusionai/ling-3.0-flash:free": 26,
+    "poolside/laguna-s-2.1:free": 33,
     "poolside/laguna-m.1:free": 22,
     "poolside/laguna-xs-2.1:free": 15,
 }

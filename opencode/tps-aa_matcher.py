@@ -24,8 +24,8 @@ MANUAL_OVERRIDES: dict[str, str] = {
 
 
 MANUAL_INTELLIGENCE: dict[str, int] = {
-    "laguna-s-2.1-free": 35,
-    "ling-3.0-flash-free": 35,
+    "laguna-s-2.1-free": 33,
+    "ling-3.0-flash-free": 26,
 }
 
 
