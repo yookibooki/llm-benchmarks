@@ -1,4 +1,4 @@
 Model,Provider,Intelligence,Latency,TPS
-inclusionai/ling-3.0-flash:free,nous,,5,534
+inclusionai/ling-3.0-flash:free,nous,35,5,534
 stepfun/step-3.7-flash:free,nous,31,4,284
 tencent/hy3:free,nous,42,5,87
