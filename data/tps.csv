@@ -40,6 +40,7 @@ poolside/laguna-m.1:free,openrouter,22,-,-
 poolside/laguna-s-2.1:free,openrouter,33,-,-
 poolside/laguna-xs-2.1:free,openrouter,15,3,76
 gemini-3.1-flash-lite,google,25,-,-
+gemini-3.5-flash-lite,google,37,-,-
 gemma-4-26b-a4b-it,google,26,0,41
 gemma-4-31b-it,google,30,0,31
 codestral-2508,mistral,11,0,191
