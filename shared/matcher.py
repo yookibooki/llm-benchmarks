@@ -67,8 +67,9 @@ def _lookup_override(overrides, model, strip_namespace):
     return _MISSING
 
 
-def match_provider(tps_path: str, *, normalize, overrides: dict[str, str | None], manual_intel: dict[str, int] | None = None, strip_namespace: bool = False, expected_creator=None) -> None:
+def match_provider(tps_path: str, *, normalize, overrides: dict[str, str | None] | None = None, manual_intel: dict[str, int] | None = None, strip_namespace: bool = False, expected_creator=None) -> None:
     manual_intel = manual_intel or {}
+    overrides = overrides or {}
     aa_index = load_aa_index()
     print(f"Loaded {len(aa_index)} AA models with intelligence + creator")
     check_duplicate_targets(overrides)

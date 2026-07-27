@@ -17,6 +17,13 @@ MANUAL_OVERRIDES: dict[str, str] = {
     "stepfun/step-3.7-flash:free": "step-3-7-flash",
     "tencent/hy3:free": "hy3",
 }
+MANUAL_INTELLIGENCE: dict[str, int] = {
+    "inclusionai/ling-3.0-flash:free": 35,
+    "poolside/laguna-s-2.1:free": 35,
+    "poolside/laguna-m.1:free": 22,
+    "poolside/laguna-xs-2.1:free": 15,
+}
+
 
 
 if __name__ == "__main__":

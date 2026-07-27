@@ -3,6 +3,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from shared.matcher import match_provider
 
+
 def normalize_slug(slug: str) -> str:
     s = slug.lower()
     s = s.removesuffix("-it")
@@ -12,9 +13,7 @@ def normalize_slug(slug: str) -> str:
     return s
 
 MANUAL_OVERRIDES: dict[str, str] = {
-    "gemma-4-26b-a4b-it": "gemma-4-26b-a4b",
-    "gemma-4-31b-it": "gemma-4-31b",
-    "gemini-3.1-flash-lite": "gemini-3-1-flash-lite-preview",
+    "gemini-3.5-flash-lite": "gemini-3-5-flash-lite",
 }
 
 if __name__ == "__main__":
