@@ -3,8 +3,8 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import json
 import httpx
-from openai import OpenAI, NotFoundError
 from shared.config import require_api_key
+
 from shared.filter import gate_changed, write_models
 from shared.provider import run_provider_benchmark
 
@@ -12,6 +12,7 @@ BASE_URL = "https://integrate.api.nvidia.com/v1"
 MODELS_URL = f"{BASE_URL}/models"
 SNAPSHOT_PATH = "nvidia/data/endpoint_snapshot.json"
 MODELS_PATH = "nvidia/data/models.txt"
+FOUR_O_FOUR_PATH = "nvidia/data/404s.txt"
 
 EXCLUDE_IDS = {
     "google/gemma-3n-e4b-it",
@@ -46,28 +47,17 @@ def name_filter(model_id: str) -> bool:
     return not any(term in lower for term in EXCLUDE_TERMS)
 
 
-def remove_404_models(model_ids: list[str], api_key: str) -> list[str]:
-    client = OpenAI(
-        base_url=BASE_URL,
-        api_key=api_key,
-        timeout=10.0,
-        max_retries=0,
-    )
-    valid = []
-    for model_id in model_ids:
-        try:
-            client.chat.completions.create(
-                model=model_id,
-                messages=[{"role": "user", "content": "hi"}],
-                max_tokens=1,
-            )
-            print(f"  [OK]   {model_id}")
-            valid.append(model_id)
-        except NotFoundError:
-            print(f"  [404]  {model_id}")
-        except Exception as e:
-            print(f"  [KEEP] {model_id} -> {type(e).__name__}: {e}")
-            valid.append(model_id)
+def remove_404_models(model_ids: list[str]) -> list[str]:
+    if not os.path.exists(FOUR_O_FOUR_PATH):
+        return model_ids
+    with open(FOUR_O_FOUR_PATH) as f:
+        known_404s = {line.strip() for line in f if line.strip()}
+    if not known_404s:
+        return model_ids
+    valid = [m for m in model_ids if m not in known_404s]
+    skipped = len(model_ids) - len(valid)
+    if skipped:
+        print(f"  skipped {skipped} known-404 models")
     return valid
 
 
@@ -81,7 +71,7 @@ if __name__ == "__main__":
 
     changed, _ = gate_changed(SNAPSHOT_PATH, name_filtered, MODELS_URL)
     if changed:
-        validated = remove_404_models(name_filtered, key)
+        validated = remove_404_models(name_filtered)
         print(f"  {len(validated)} models after 404 validation")
         write_models(MODELS_PATH, validated)
         print("  wrote updated models.txt")
