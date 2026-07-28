@@ -16,7 +16,6 @@ def normalize_slug(slug: str) -> str:
 MANUAL_OVERRIDES: dict[str, str] = {
     "big-pickle": "glm-4-7",
     "deepseek-v4-flash-free": "deepseek-v4-flash",
-    "hy3-free": "hy3",
     "mimo-v2.5-free": "mimo-v2-5-pro",
     "nemotron-3-ultra-free": "nvidia-nemotron-3-ultra-550b-a55b",
     "north-mini-code-free": "north-mini-code",

@@ -22,9 +22,6 @@ MANUAL_OVERRIDES: dict[str, str] = {
 }
 MANUAL_INTELLIGENCE: dict[str, int] = {
     "inclusionai/ling-3.0-flash:free": 26,
-    "poolside/laguna-s-2.1:free": 33,
-    "poolside/laguna-m.1:free": 22,
-    "poolside/laguna-xs-2.1:free": 15,
 }
 
 if __name__ == "__main__":
