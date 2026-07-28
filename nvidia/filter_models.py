@@ -18,7 +18,20 @@ EXCLUDE_IDS = {
     "google/gemma-3n-e4b-it",
     "google/gemma-3n-e2b-it",
     "microsoft/phi-4-mini-instruct",
+    "deepseek-ai/deepseek-v4-pro",
+    "meta/llama-3.1-70b-instruct",
+    "meta/llama-3.3-70b-instruct",
+    "minimaxai/minimax-m3",
+    "mistralai/mistral-medium-3.5-128b",
+    "nvidia/llama-3.1-nemotron-nano-8b-v1",
+    "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+    "nvidia/nemotron-3-nano-30b-a3b",
+    "nvidia/nemotron-mini-4b-instruct",
+    "nvidia/nemotron-nano-12b-v2-vl",
+    "nvidia/nvidia-nemotron-nano-9b-v2",
 }
+
+
 
 EXCLUDE_TERMS = [
     "-1b-", "-1b", "-2b-", "-2b", "-3b-", "-3b",

@@ -12,6 +12,8 @@ SNAPSHOT_PATH = "mistral/data/endpoint_snapshot.json"
 EXCLUDE_TERMS = [
     "embed", "fim", "ocr", "moderation", "tts", "stt", "realtime",
     "transcribe", "voxtral", "open-mistral-nemo",
+    "labs-leanstral-1-5",
+    "labs-leanstral-1-5-1",
 ]
 
 SMALL_MODEL_PATTERNS = ["-1b-", "-1b.", "-1.2b-", "-1.3b-", "-2b-", "-2b."]

@@ -13,6 +13,7 @@ EXCLUDE_TERMS = [
     "embed", "rerank", "moderation", "tts", "stt", "whisper", "dall-e",
     "stable-diffusion", "midjourney", "content-safety", "safety", "guard",
     "lyria", "clip", "audio", "music",
+    "laguna-s-2.1-free",
 ]
 
 

@@ -13,6 +13,13 @@ EXCLUDE_TERMS = [
     "embed", "rerank", "moderation", "openrouter/free", "tts", "stt",
     "whisper", "dall-e", "stable-diffusion", "midjourney", "content-safety",
     "safety", "guard", "lyria", "clip", "audio", "music",
+    "google/gemma-4-31b-it:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "nvidia/nemotron-nano-12b-v2-vl:free",
+    "nvidia/nemotron-nano-9b-v2:free",
+    "poolside/laguna-m.1:free",
+    "poolside/laguna-s-2.1:free",
+    "poolside/laguna-xs-2.1:free",
 ]
 
 SMALL_MODEL_PATTERNS = ["-1b-", "-1b.", "-1.2b-", "-1.3b-", "-2b-", "-2b."]
