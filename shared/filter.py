@@ -21,11 +21,11 @@ def write_models(output_path: str, model_ids: list[str]) -> None:
 
 def gate_and_write(label: str, *, model_ids: list[str], output_path: str, snapshot_path: str, source_url: str, name_filter=None) -> None:
     print(f"  {len(model_ids)} models returned")
+    if name_filter is not None:
+        model_ids = [m for m in model_ids if name_filter(m)]
+        print(f"  {len(model_ids)} survive name filter")
     changed, model_ids = gate_changed(snapshot_path, model_ids, source_url)
     if not changed:
         print("  catalog unchanged since last run; skipping filter")
         return
-    if name_filter is not None:
-        model_ids = [m for m in model_ids if name_filter(m)]
-        print(f"  {len(model_ids)} survive name filter")
     write_models(output_path, model_ids)
