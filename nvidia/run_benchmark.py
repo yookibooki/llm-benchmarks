@@ -4,30 +4,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import json
 import httpx
 from shared.config import require_api_key
-
 from shared.filter import gate_changed, write_models
 from shared.provider import run_provider_benchmark
+from filter_models import name_filter
 
 BASE_URL = "https://integrate.api.nvidia.com/v1"
 MODELS_URL = f"{BASE_URL}/models"
 SNAPSHOT_PATH = "nvidia/data/endpoint_snapshot.json"
 MODELS_PATH = "nvidia/data/models.txt"
 FOUR_O_FOUR_PATH = "nvidia/data/404s.txt"
-
-EXCLUDE_IDS = {
-    "google/gemma-3n-e4b-it",
-    "google/gemma-3n-e2b-it",
-    "microsoft/phi-4-mini-instruct",
-}
-
-EXCLUDE_TERMS = [
-    "-1b-", "-1b", "-2b-", "-2b", "-3b-", "-3b",
-    "embed", "image", "vision", "video", "audio",
-    "moderation", "rerank", "guard", "clip", "parse", "retriever", "deplot",
-    "diffusion", "kosmos", "neva", "vila", "pii", "reward", "safety",
-    "content-safety", "ising", "bge", "fuyu", "multimodal", "translate", "cosmos",
-    "llama2", "llama3-chatqa", "codegemma", "codellama", "recurrentgemma",
-]
 
 
 def get_model_ids(headers: dict) -> list[str]:
@@ -38,13 +23,6 @@ def get_model_ids(headers: dict) -> list[str]:
     resp = httpx.get(MODELS_URL, headers=headers, timeout=30)
     resp.raise_for_status()
     return [m["id"] for m in resp.json()["data"]]
-
-
-def name_filter(model_id: str) -> bool:
-    if model_id in EXCLUDE_IDS:
-        return False
-    lower = model_id.lower()
-    return not any(term in lower for term in EXCLUDE_TERMS)
 
 
 def remove_404_models(model_ids: list[str]) -> list[str]:
