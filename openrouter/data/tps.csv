@@ -1,8 +1,8 @@
 Model,Provider,Intelligence,Latency,TPS
 cohere/north-mini-code:free,openrouter,20,-,-
-google/gemma-4-26b-a4b-it:free,openrouter,26,0,20
-inclusionai/ling-3.0-flash:free,openrouter,26,2,909
-nvidia/nemotron-3-nano-30b-a3b:free,openrouter,8,5,126
-nvidia/nemotron-3-super-120b-a12b:free,openrouter,26,1,137
+google/gemma-4-26b-a4b-it:free,openrouter,26,0,18
+inclusionai/ling-3.0-flash:free,openrouter,26,5,532
+nvidia/nemotron-3-nano-30b-a3b:free,openrouter,8,4,217
+nvidia/nemotron-3-super-120b-a12b:free,openrouter,26,-,-
 nvidia/nemotron-3-ultra-550b-a55b:free,openrouter,38,-,-
-openai/gpt-oss-20b:free,openrouter,15,-,-
+openai/gpt-oss-20b:free,openrouter,15,1,41
