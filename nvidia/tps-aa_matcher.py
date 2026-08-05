@@ -56,6 +56,7 @@ MANUAL_OVERRIDES: dict[str, str] = {
     "nemotron-3-nano-omni-30b-a3b-reasoning": "nemotron-3-nano-omni-30b-a3b",
     "nemotron-3-super-120b-a12b": "nvidia-nemotron-3-super-120b-a12b",
     "nemotron-3-ultra-550b-a55b": "nvidia-nemotron-3-ultra-550b-a55b",
+    "nemotron3-ultra-genrm": "nvidia-nemotron-3-ultra-550b-a55b",
     "mistral-nemotron": "mistral-medium-3",
 }
 
