@@ -1,5 +1,5 @@
 Model,Provider,Intelligence,Latency,TPS
-deepseek-ai/deepseek-v4-flash,nvidia,41,0,40
+deepseek-ai/deepseek-v4-flash,nvidia,50,0,40
 google/gemma-4-31b-it,nvidia,30,-,-
 meta/llama-3.1-8b-instruct,nvidia,8,-,-
 mistralai/mistral-nemotron,nvidia,13,-,-
