@@ -2,6 +2,7 @@ codestral-latest
 devstral-latest
 devstral-medium-latest
 glm-5-2
+magistral-medium-latest
 magistral-small-latest
 ministral-14b-latest
 ministral-3b-latest
