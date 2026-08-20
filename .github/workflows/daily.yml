@@ -1,0 +1,128 @@
+name: daily
+
+on:
+  schedule:
+    - cron: "0 17 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daily-benchmark
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    env:
+      NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+      NOUS_API_KEY: ${{ secrets.NOUS_API_KEY }}
+      AA_API_KEY: ${{ secrets.AA_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python3 -m pip install -r requirements.txt
+
+      - name: Filter models
+        run: |
+          pids=()
+          for prov in nvidia openrouter google mistral nous; do
+            (
+              echo "--- $prov filter ---"
+              python3 "$prov/filter_models.py" || { echo "WARNING: $prov filter failed"; touch "/tmp/filter-failed-$prov"; }
+            ) &
+            pids+=($!)
+          done
+          for pid in "${pids[@]}"; do wait "$pid"; done
+          for prov in nvidia openrouter google mistral nous; do
+            if [ -f "/tmp/filter-failed-$prov" ]; then
+              echo "::warning::Filter failed for $prov"
+            fi
+          done
+      - name: Benchmark
+        run: |
+          pids=()
+          for prov in nvidia openrouter google mistral nous; do
+            (
+              echo "--- $prov benchmark ---"
+              python3 "$prov/run_benchmark.py" || { echo "WARNING: $prov benchmark failed"; touch "/tmp/bench-failed-$prov"; }
+            ) &
+            pids+=($!)
+          done
+          for pid in "${pids[@]}"; do wait "$pid"; done
+          for prov in nvidia openrouter google mistral nous; do
+            if [ -f "/tmp/bench-failed-$prov" ]; then
+              echo "::warning::Benchmark failed for $prov — stale or missing data will be published"
+            fi
+          done
+      - name: Refresh AA intelligence data
+        run: |
+          echo "--- fetching AA model data ---"
+          curl -H "x-api-key: $AA_API_KEY" https://artificialanalysis.ai/api/v2/data/llms/models -o data/aa_raw.json
+          echo "Fetched $(wc -l < data/aa_raw.json) lines of AA data"
+
+      - name: Match AA intelligence
+        run: |
+          declare -A failed
+          pids=()
+          for prov in nvidia openrouter google mistral nous; do
+            (
+              echo "--- $prov matcher ---"
+              python3 "$prov/tps-aa_matcher.py" || { echo "WARNING: $prov matcher failed"; touch "/tmp/matcher-failed-$prov"; }
+            ) &
+            pids+=($!)
+          done
+          for pid in "${pids[@]}"; do wait "$pid"; done
+          for prov in nvidia openrouter google mistral nous; do
+            if [ -f "/tmp/matcher-failed-$prov" ]; then failed[$prov]=1; fi
+          done
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "::warning::Failed matchers: ${!failed[@]}"
+          fi
+
+      - name: Generate merged index.html
+        run: python3 gen_html.py
+
+      - name: Commit data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/tps.csv data/aa_raw.json index.html nvidia/data/ openrouter/data/ google/data/ mistral/data/ nous/data/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Data update"
+            for attempt in 1 2; do
+              if git push; then
+                break
+              fi
+              if [ "$attempt" = "2" ]; then
+                echo "Push failed after rebase retry" >&2
+                exit 1
+              fi
+              echo "Push rejected, fetching and rebasing..."
+              git fetch origin
+              branch=$(git rev-parse --abbrev-ref HEAD)
+              GIT_SEQUENCE_EDITOR=true git rebase "origin/$branch"
+            done
+          fi
+
+      - name: Upload Pages artifact
+        if: success()
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        if: success()
+        id: deployment
+        uses: actions/deploy-pages@v5
