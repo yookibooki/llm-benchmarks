@@ -15,4 +15,3 @@ openai/gpt-oss-20b
 poolside/laguna-xs-2.1
 stepfun-ai/step-3.7-flash
 thinkingmachines/inkling
-z-ai/glm-5.2
