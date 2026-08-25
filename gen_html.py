@@ -18,7 +18,6 @@ HTML_PATH = REPO_ROOT / "index.html"
 
 
 def _int_or_float(v):
-    """Parse a CSV cell that may be '-' or a number (int or float)."""
     if v in ("", "-", None):
         return None
     return float(v)
@@ -36,7 +35,6 @@ def _has_measurements(r):
 
 
 def _fmt_number(v):
-    """Format a numeric cell: one decimal for small latency, integer for TPS."""
     if v in ("", "-", None):
         return "-"
     try:
@@ -49,15 +47,6 @@ def _fmt_number(v):
 
 
 def reconcile_with_catalogs(all_rows):
-    """Ensure the page mirrors the providers' endpoint catalogs exactly.
-
-    Adds models in the endpoint catalog but missing from merged data, and
-    removes rows whose model is no longer in its provider's catalog (model
-    deleted from the endpoint). Benchmark failures are NOT a removal
-    criterion — rows for catalogued models are preserved even when the
-    latest benchmark attempt failed.
-    Writes the reconciled data back to MERGED_PATH.
-    """
     catalogs: dict[str, set[str]] = {}
     for prov in PROVIDER_NAMES:
         models_path = REPO_ROOT / prov / "data" / "models.txt"
@@ -99,7 +88,6 @@ def reconcile_with_catalogs(all_rows):
 
 
 def validate_consistency(all_rows):
-    """Warn when endpoint catalog models are missing from benchmark data."""
     for prov in PROVIDER_NAMES:
         models_path = REPO_ROOT / prov / "data" / "models.txt"
         if not models_path.exists():
@@ -117,11 +105,11 @@ def validate_consistency(all_rows):
 
 
 def build_sort_key(r):
-    """Sort: measured models with intelligence first, then the rest."""
+    intelligence = _int_or_float(r["Intelligence"]) if _has_intelligence(r) else 0
     return (
-        0 if _has_intelligence(r) else 1,
-        0 if _has_measurements(r) else 1,
-        -_int_or_float(r["Intelligence"]) if _has_intelligence(r) else 0,
+        not _has_intelligence(r),
+        not _has_measurements(r),
+        -intelligence,
         r.get("Provider", ""),
         r.get("Model", ""),
     )

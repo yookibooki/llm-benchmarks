@@ -153,12 +153,9 @@ curl -H "x-api-key: $AA_API_KEY" https://artificialanalysis.ai/api/v2/data/llms/
 - Uses `openai` Python client with streaming.
 - `api_kind` controls `chat.completions` vs `responses` API.
 
-## Conventions
-
-- API keys from env vars / repo secrets only (no `.env` files per provider).
-- Provider scripts insert repo root in `sys.path` before importing `shared.*`.
-- `shared/` must stay provider-agnostic; provider-specific logic (excludes,
-  normalization, overrides) lives in each provider's scripts.
+- **No comments or docstrings in code, ever.** The codebase is entirely
+  AI-written; if code needs a comment, fix the code (rename, restructure)
+  instead of annotating it.
 
 ## Adding to the CI provider list
 

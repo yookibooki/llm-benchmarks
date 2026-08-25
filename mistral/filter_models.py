@@ -44,11 +44,6 @@ def name_filter(model_id: str) -> bool:
 
 
 def canonicalize_model(model_id: str) -> str:
-    """Reduce a model ID to its canonical form for alias deduplication.
-
-    Strips date suffixes (-2512) and -latest, normalises dots to dashes,
-    matching the matcher's normalize_slug so aliased IDs collapse together.
-    """
     s = model_id.replace(".", "-")
     s = re.sub(r"-\d{4}$", "", s)
     s = s.removesuffix("-latest")
@@ -56,7 +51,6 @@ def canonicalize_model(model_id: str) -> str:
 
 
 def _alias_priority(model_id: str) -> int:
-    """Higher is better: prefer -latest aliases and non-dated versions."""
     score = 0
     if model_id.endswith("-latest"):
         score += 10
@@ -66,7 +60,6 @@ def _alias_priority(model_id: str) -> int:
 
 
 def deduplicate_aliases(model_ids: list[str]) -> list[str]:
-    """Keep one representative per canonical model, preferring -latest."""
     by_canon: dict[str, list[str]] = {}
     for model_id in model_ids:
         by_canon.setdefault(canonicalize_model(model_id), []).append(model_id)

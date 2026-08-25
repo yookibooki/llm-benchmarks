@@ -20,7 +20,6 @@ EXPECTED_TEXT = "The quick brown fox jumps over the lazy dog."
 
 
 def _validate_content(text: str) -> bool:
-    """Check that the response looks like a real benchmark output (not garbage)."""
     return "quick brown fox" in text.lower()
 
 PROMPT = """
@@ -68,10 +67,6 @@ class _BenchmarkTimeout(Exception):
 
 @contextmanager
 def _total_timeout_guard(total_timeout: float):
-    """Hard total timeout via SIGALRM on the main thread (reliable interrupt).
-
-    Falls back to a no-op on non-main threads or platforms without SIGALRM.
-    """
     if threading.current_thread() is threading.main_thread() and hasattr(signal, "SIGALRM"):
         old_handler = signal.getsignal(signal.SIGALRM)
 
@@ -162,7 +157,6 @@ def _run_benchmark(
     if not chars:
         return _fail(model_id, provider, "No content tokens received")
 
-    # Content validation: reject responses that don't contain the benchmark sentence.
     response_text = "".join(full_text)
     if not _validate_content(response_text):
         return _fail(

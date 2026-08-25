@@ -64,7 +64,6 @@ def _benchmark_with_retry(
     client,
     max_attempts: int = 3,
 ):
-    """Run a benchmark with retry on transient connection/rate-limit errors."""
     from openai import APIConnectionError, RateLimitError
     from shared.benchmark import benchmark
 

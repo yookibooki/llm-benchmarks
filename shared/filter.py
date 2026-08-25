@@ -24,7 +24,6 @@ def write_models(output_path: str, model_ids: list[str]) -> None:
 
 
 def _quorum_check(new_ids: list[str], output_path: str, label: str) -> None:
-    """Warn if the catalog shrank dramatically — a possible endpoint issue."""
     if not os.path.exists(output_path):
         return
     with open(output_path) as f:
@@ -56,8 +55,6 @@ def gate_and_write(label: str, *, model_ids: list[str], output_path: str, snapsh
 
     changed, model_ids = gate_changed(snapshot_path, model_ids, source_url)
 
-    # If the output file is missing, we must (re)write even if the catalog
-    # hash hasn't changed — otherwise benchmark step finds no model list.
     if not changed and os.path.exists(output_path):
         print(f"  {label}: catalog unchanged and output exists; skipping filter")
         return

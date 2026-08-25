@@ -23,7 +23,6 @@ MANUAL_OVERRIDES: dict[str, str] = {
     "upstage/solar-pro4:free": "solar-pro4",
 }
 MANUAL_INTELLIGENCE: dict[str, int] = {
-    # poolside models have no AA entry; values set manually
     "poolside/laguna-s-2.1:free": 33,
     "poolside/laguna-xs-2.1:free": 15,
 }

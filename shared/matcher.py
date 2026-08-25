@@ -17,7 +17,6 @@ def _resolve(path: str) -> Path:
 
 
 def _load_catalog(model_ids_path: str | None) -> list[str] | None:
-    """Read model IDs from a provider's models.txt (endpoint catalog)."""
     if not model_ids_path:
         return None
     path = _resolve(model_ids_path)
@@ -32,7 +31,6 @@ def _ensure_catalog_models(
     model_ids_path: str | None,
     provider_name: str | None,
 ) -> list[dict]:
-    """Ensure every model from the endpoint catalog is represented in the rows."""
     catalog = _load_catalog(model_ids_path)
     if catalog is None:
         return rows
