@@ -15,14 +15,20 @@ def normalize_slug(slug: str) -> str:
 
 
 MANUAL_OVERRIDES: dict[str, str | None] = {
-    "google/gemma-4-26b-a4b-it:free": "gemma-4-26b-a4b",
-    "nvidia/nemotron-3-nano-30b-a3b:free": "nvidia-nemotron-3-nano-30b-a3b",
-    "nvidia/nemotron-3-super-120b-a12b:free": "nvidia-nemotron-3-super-120b-a12b",
-    "nvidia/nemotron-3-ultra-550b-a55b:free": "nvidia-nemotron-3-ultra-550b-a55b",
-    "nvidia/nemotron-3.5-lightning:free": "nemotron-3-5-lightning",
-    "openai/gpt-oss-20b:free": "gpt-oss-20b",
-    "cohere/north-mini-code:free": "north-mini-code",
-    "inclusionai/ling-3.0-tiny:free": "ling-3-0-tiny",
+	"cohere/north-mini-code:free": "north-mini-code",
+	"google/gemma-4-26b-a4b-it:free": "gemma-4-26b-a4b",
+	"inclusionai/ling-3.0-tiny:free": "ling-3-0-tiny",
+	"liquid/lfm-2.5-2.6b:free": "lfm2-5-2-6b",
+	"minimax/minimax-m2.7:free": "minimax-m2-7",
+	"minimax/minimax-m3:free": "minimax-m3",
+	"nvidia/nemotron-3-nano-30b-a3b:free": "nvidia-nemotron-3-nano-30b-a3b",
+	"nvidia/nemotron-3-super-120b-a12b:free": "nvidia-nemotron-3-super-120b-a12b",
+	"nvidia/nemotron-3-ultra-550b-a55b:free": "nvidia-nemotron-3-ultra-550b-a55b",
+	"nvidia/nemotron-3.5-lightning:free": "nemotron-3-5-lightning",
+	"openai/gpt-oss-20b:free": "gpt-oss-20b",
+	"thinkingmachines/inkling-small:free": "inkling-small",
+	"thinkingmachines/inkling:free": "inkling",
+	"z-ai/glm-5.2:free": "glm-5-2",
 }
 
 MANUAL_INTELLIGENCE: dict[str, int] = {
