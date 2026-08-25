@@ -39,8 +39,10 @@ renders `index.html`, commits, and deploys to GitHub Pages.
 - Benchmarks write results incrementally (one row per model after each benchmark),
   so a mid-run crash preserves partial results.
 - Transient API errors are retried with exponential backoff (max 3 attempts).
-- `gen_html.py` reconciles every `provider/data/tps.csv` against each
-  provider's `models.txt`: it adds any endpoint model missing from benchmark
+  data so no model is ever absent from the leaderboard, and it removes rows
+  whose model has disappeared from the endpoint catalog. Benchmark failures
+  are NOT a removal criterion — a model that merely fails to respond keeps
+  its row (with `-` measurements) as long as it is still in the catalog.
   data so no model is ever absent from the leaderboard. Models are never
   removed — if a model has benchmark data, it stays on the page even if the
   endpoint catalog changes.
@@ -86,9 +88,8 @@ Shared `data/tps.csv` and `index.html` are also auto-generated — edit
 
 ### How to persist model changes
 
-- **Filter a model out** → add an exclude term to `filter_models.py`'s `EXCLUDE_TERMS`.
-- **Add a model** → models must be returned by the API AND pass `name_filter()` —
-  adjust the filter logic if needed.
+- **Remove a model from the leaderboard** → it must disappear from the provider's
+  API catalog; `gen_html.py` prunes rows absent from `models.txt` on the next run.
 - **Override AA slug matching** → add to `MANUAL_OVERRIDES` in `tps-aa_matcher.py`.
 - **Set intelligence manually** (no AA match) → add to `MANUAL_INTELLIGENCE` in
   `tps-aa_matcher.py`.

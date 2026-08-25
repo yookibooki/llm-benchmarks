@@ -49,19 +49,24 @@ def _fmt_number(v):
 
 
 def reconcile_with_catalogs(all_rows):
-    """Ensure every model from every provider's models.txt is present on the page.
+    """Ensure the page mirrors the providers' endpoint catalogs exactly.
 
-    Adds models in the endpoint catalog but missing from merged data.
-    Models are never removed — existing benchmark rows are always preserved.
+    Adds models in the endpoint catalog but missing from merged data, and
+    removes rows whose model is no longer in its provider's catalog (model
+    deleted from the endpoint). Benchmark failures are NOT a removal
+    criterion — rows for catalogued models are preserved even when the
+    latest benchmark attempt failed.
     Writes the reconciled data back to MERGED_PATH.
     """
+    catalogs: dict[str, set[str]] = {}
     for prov in PROVIDER_NAMES:
         models_path = REPO_ROOT / prov / "data" / "models.txt"
         if not models_path.exists():
             continue
         with open(models_path) as f:
-            endpoint_models = {line.strip() for line in f if line.strip()}
+            catalogs[prov] = {line.strip() for line in f if line.strip()}
 
+    for prov, endpoint_models in catalogs.items():
         csv_models = {r["Model"] for r in all_rows if r["Provider"] == prov}
 
         for model in sorted(endpoint_models - csv_models):
@@ -72,6 +77,17 @@ def reconcile_with_catalogs(all_rows):
                 "Latency": "-",
                 "TPS": "-",
             })
+
+        stale = csv_models - endpoint_models
+        if stale:
+            print(f"  Removed {len(stale)} {prov} models absent from the endpoint catalog")
+            for model in sorted(stale)[:10]:
+                print(f"    - {model}")
+
+    all_rows[:] = [
+        r for r in all_rows
+        if r["Provider"] not in catalogs or r["Model"] in catalogs[r["Provider"]]
+    ]
 
     fieldnames = ["Model", "Provider", "Intelligence", "Latency", "TPS"]
     with open(MERGED_PATH, "w", newline="") as f:
