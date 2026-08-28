@@ -11,4 +11,3 @@ nvidia/nemotron-3.5-lightning-30b-a3b
 openai/gpt-oss-120b
 openai/gpt-oss-20b
 poolside/laguna-xs-2.1
-stepfun-ai/step-3.7-flash
