@@ -1,7 +1,6 @@
 codestral-latest
 devstral-latest
 devstral-medium-latest
-glm-5-2
 magistral-medium-latest
 magistral-small-latest
 ministral-14b-latest
@@ -17,4 +16,3 @@ mistral-small-latest
 mistral-vibe-cli-fast
 mistral-vibe-cli-latest
 mistral-vibe-cli-with-tools
-zai-glm-5-2

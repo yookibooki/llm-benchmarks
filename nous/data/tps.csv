@@ -1,7 +1,7 @@
 Model,Provider,Intelligence,Latency,TPS
 meituan/longcat-2.0:free,nous,34,-,-
-poolside/laguna-s-2.1:free,nous,33,0.0,476
-poolside/laguna-xs-2.1:free,nous,15,2.4,129
+poolside/laguna-s-2.1:free,nous,33,7.1,48
+poolside/laguna-xs-2.1:free,nous,15,2.3,186
 stepfun/step-3.7-flash:free,nous,31,-,-
-tencent/hy3:free,nous,43,4.4,85
-upstage/solar-pro4:free,nous,42,0.0,2
+tencent/hy3:free,nous,43,-,-
+upstage/solar-pro4:free,nous,42,-,-
