@@ -27,7 +27,7 @@ MANUAL_INTELLIGENCE: dict[str, int] = {
     "poolside/laguna-xs-2.1:free": 15,
 }
 
-if __name__ == "__main__":
+def _main():
     match_provider(
         "nous/data/tps.csv",
         normalize=normalize_slug,
@@ -36,3 +36,7 @@ if __name__ == "__main__":
         models_path="nous/data/models.txt",
         provider_name="nous",
     )
+
+
+if __name__ == "__main__":
+    _main()

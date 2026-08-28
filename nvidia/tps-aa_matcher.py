@@ -63,7 +63,7 @@ MANUAL_INTELLIGENCE: dict[str, int] = {
 }
 
 
-if __name__ == "__main__":
+def _main():
     match_provider(
         "nvidia/data/tps.csv",
         normalize=normalize_slug,
@@ -74,3 +74,7 @@ if __name__ == "__main__":
         models_path="nvidia/data/models.txt",
         provider_name="nvidia",
     )
+
+
+if __name__ == "__main__":
+    _main()

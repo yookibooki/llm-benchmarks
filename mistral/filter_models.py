@@ -20,7 +20,7 @@ EXCLUDE_TERMS = [
 SMALL_MODEL_PATTERNS = ["-1b-", "-1b.", "-1.2b-", "-1.3b-", "-2b-", "-2b."]
 
 
-def fetch_chat_models() -> list[str]:
+def get_model_ids() -> list[str]:
     key = require_api_key("mistral", "MISTRAL_API_KEY")
     resp = httpx.get(MODELS_URL, headers={"Authorization": f"Bearer {key}"}, timeout=30)
     resp.raise_for_status()
@@ -34,16 +34,7 @@ def fetch_chat_models() -> list[str]:
     return sorted(set(chat_models))
 
 
-def name_filter(model_id: str) -> bool:
-    lower = model_id.lower()
-    if any(term in lower for term in EXCLUDE_TERMS):
-        return False
-    if any(pat in lower for pat in SMALL_MODEL_PATTERNS):
-        return False
-    return True
-
-
-def canonicalize_model(model_id: str) -> str:
+def _canonicalize(model_id: str) -> str:
     s = model_id.replace(".", "-")
     s = re.sub(r"-\d{4}$", "", s)
     s = s.removesuffix("-latest")
@@ -59,33 +50,42 @@ def _alias_priority(model_id: str) -> int:
     return score
 
 
-def deduplicate_aliases(model_ids: list[str]) -> list[str]:
+def name_filter(model_ids: list[str]) -> list[str]:
+    filtered = []
+    for m in model_ids:
+        lower = m.lower()
+        if any(term in lower for term in EXCLUDE_TERMS):
+            continue
+        if any(pat in lower for pat in SMALL_MODEL_PATTERNS):
+            continue
+        filtered.append(m)
+    print(f"  {len(filtered)} survive name filter")
     by_canon: dict[str, list[str]] = {}
-    for model_id in model_ids:
-        by_canon.setdefault(canonicalize_model(model_id), []).append(model_id)
-    result = []
+    for m in filtered:
+        by_canon.setdefault(_canonicalize(m), []).append(m)
+    deduped = []
     for canon, aliases in by_canon.items():
         if len(aliases) == 1:
-            result.append(aliases[0])
+            deduped.append(aliases[0])
         else:
             best = max(aliases, key=_alias_priority)
             dropped = [a for a in aliases if a != best]
             print(f"  dedup: keeping '{best}', dropping {len(dropped)} alias(es): {dropped}")
-            result.append(best)
-    return result
-
-
-if __name__ == "__main__":
-    print("Fetching models from Mistral...")
-    all_models = fetch_chat_models()
-    filtered = [m for m in all_models if name_filter(m)]
-    print(f"  {len(filtered)} survive name filter")
-    deduped = deduplicate_aliases(filtered)
+            deduped.append(best)
     print(f"  {len(deduped)} after alias deduplication")
+    return deduped
+
+
+def run() -> None:
+    print("Fetching models from Mistral...")
     gate_and_write(
         "Mistral",
-        model_ids=deduped,
+        model_ids=name_filter(get_model_ids()),
         output_path=OUTPUT_PATH,
         snapshot_path=SNAPSHOT_PATH,
         source_url=MODELS_URL,
     )
+
+
+if __name__ == "__main__":
+    run()

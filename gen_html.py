@@ -77,13 +77,6 @@ def reconcile_with_catalogs(all_rows):
         r for r in all_rows
         if r["Provider"] not in catalogs or r["Model"] in catalogs[r["Provider"]]
     ]
-
-    fieldnames = ["Model", "Provider", "Intelligence", "Latency", "TPS"]
-    with open(MERGED_PATH, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(all_rows)
-
     return all_rows
 
 
@@ -153,6 +146,7 @@ th {{ background: #2a2a2a; cursor: pointer; }}
 .provider-google {{ background: #4285f4; color: #fff; }}
 .provider-mistral {{ background: #ff7000; color: #000; }}
 .provider-nous {{ background: #e74c3c; color: #fff; }}
+.provider-opencode {{ background: #9b59b6; color: #fff; }}
 </style>
 </head>
 <body>

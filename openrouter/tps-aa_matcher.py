@@ -36,7 +36,7 @@ MANUAL_INTELLIGENCE: dict[str, int] = {
 }
 
 
-if __name__ == "__main__":
+def _main():
     match_provider(
         "openrouter/data/tps.csv",
         normalize=normalize_slug,
@@ -45,3 +45,7 @@ if __name__ == "__main__":
         models_path="openrouter/data/models.txt",
         provider_name="openrouter",
     )
+
+
+if __name__ == "__main__":
+    _main()

@@ -5,14 +5,14 @@ import threading
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openai import OpenAI
 
 MAX_TOKENS = 4096
 
-HARD_TIMEOUT = 8.0
+HARD_TIMEOUT = 15.0
 TOTAL_TIMEOUT = 45.0
 CHARS_PER_TOKEN = 4.0
 
@@ -45,6 +45,7 @@ class BenchmarkResult:
     tps: float | None = None
     error: str | None = None
     exc: BaseException | None = None
+    token_source: str | None = None
 
     def row(self, intelligence: dict[str, str]) -> list[str]:
         fmt_tps = lambda v: str(round(v)) if v is not None else "-"
@@ -59,6 +60,23 @@ class BenchmarkResult:
             fmt_lat(self.latency),
             fmt_tps(self.tps),
         ]
+
+    @classmethod
+    def from_row(cls, row: dict) -> "BenchmarkResult":
+        def _num(v):
+            if v in ("", "-", None):
+                return None
+            try:
+                return float(v)
+            except (ValueError, TypeError):
+                return None
+
+        return cls(
+            model=row.get("Model", ""),
+            provider=row.get("Provider", ""),
+            latency=_num(row.get("Latency")),
+            tps=_num(row.get("TPS")),
+        )
 
 
 class _BenchmarkTimeout(Exception):
@@ -106,6 +124,7 @@ def _run_benchmark(
     total_timeout: float,
     hard_timeout: float,
     extract_delta,
+    extract_usage,
 ) -> BenchmarkResult:
     start = time.monotonic()
 
@@ -172,8 +191,12 @@ def _run_benchmark(
     if streaming_elapsed <= 0:
         return _fail(model_id, provider, "Invalid duration")
 
-    estimated_tokens = chars / CHARS_PER_TOKEN
-    tps = estimated_tokens / streaming_elapsed
+    usage_tokens = extract_usage()
+    token_source = "usage"
+    if usage_tokens is None or usage_tokens <= 0:
+        usage_tokens = chars / CHARS_PER_TOKEN
+        token_source = "chars/4"
+    tps = usage_tokens / streaming_elapsed
 
     print(
         f"  [PASS] {model_id} -> "
@@ -186,6 +209,7 @@ def _run_benchmark(
         provider=provider,
         latency=latency,
         tps=tps,
+        token_source=token_source,
     )
 
 
@@ -193,39 +217,28 @@ def benchmark(
     model_id: str,
     client: OpenAI,
     provider: str,
-    api_kind: str,
 ) -> BenchmarkResult:
     try:
-        if api_kind == "responses":
-            stream = client.responses.create(
-                model=model_id,
-                input=PROMPT,
-                stream=True,
-                max_output_tokens=MAX_TOKENS,
-            )
+        stream = client.chat.completions.create(
+            model=model_id,
+            messages=[{"role": "user", "content": PROMPT}],
+            stream=True,
+            max_tokens=MAX_TOKENS,
+            stream_options={"include_usage": True},
+        )
 
-            extract_delta = lambda e: (
-                e.delta
-                if getattr(e, "type", None) == "response.output_text.delta"
-                and getattr(e, "delta", None)
-                else None
-            )
+        state = {"usage": None}
 
-        else:
-            stream = client.chat.completions.create(
-                model=model_id,
-                messages=[{"role": "user", "content": PROMPT}],
-                stream=True,
-                max_tokens=MAX_TOKENS,
-                stream_options={"include_usage": True},
-            )
+        def extract_delta(c):
+            state["usage"] = getattr(c, "usage", None)
+            choices = getattr(c, "choices", None)
+            if choices and getattr(choices[0].delta, "content", None):
+                return choices[0].delta.content
+            return None
 
-            extract_delta = lambda c: (
-                c.choices[0].delta.content
-                if getattr(c, "choices", None)
-                and c.choices[0].delta.content
-                else None
-            )
+        def extract_usage():
+            u = state["usage"]
+            return getattr(u, "completion_tokens", None) if u else None
 
     except Exception as e:
         return _fail(model_id, provider, f"{type(e).__name__}: {e}", exc=e)
@@ -237,4 +250,5 @@ def benchmark(
         TOTAL_TIMEOUT,
         HARD_TIMEOUT,
         extract_delta,
+        extract_usage,
     )

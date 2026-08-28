@@ -5,24 +5,26 @@ from shared.matcher import match_provider
 
 
 def normalize_slug(slug: str) -> str:
-    s = slug.lower()
-    s = s.removesuffix("-it")
+    s = slug
+    s = s.removesuffix("-free").removesuffix(":free")
     s = s.replace(".", "-")
-    if s.startswith("gemini-") and "-preview" not in s and "-pro-" not in s:
-        s = s + "-preview"
+    s = s.removesuffix("-it").removesuffix("-instruct")
     return s
 
-MANUAL_OVERRIDES: dict[str, str] = {
-    "gemini-3.5-flash-lite": "gemini-3-5-flash-lite",
-}
+
+MANUAL_OVERRIDES: dict[str, str] = {}
+
+MANUAL_INTELLIGENCE: dict[str, int] = {}
+
 
 def _main():
     match_provider(
-        "google/data/tps.csv",
+        "opencode/data/tps.csv",
         normalize=normalize_slug,
         overrides=MANUAL_OVERRIDES,
-        models_path="google/data/models.txt",
-        provider_name="google",
+        manual_intel=MANUAL_INTELLIGENCE,
+        models_path="opencode/data/models.txt",
+        provider_name="opencode",
     )
 
 

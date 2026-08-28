@@ -32,7 +32,6 @@ EXCLUDE_IDS = {
 }
 
 
-
 EXCLUDE_TERMS = [
     "-1b-", "-1b", "-2b-", "-2b", "-3b-", "-3b",
     "embed", "image", "vision", "video", "audio",
@@ -77,7 +76,7 @@ def remove_404_models(model_ids: list[str]) -> list[str]:
     return valid
 
 
-if __name__ == "__main__":
+def run() -> None:
     print("Fetching model list from NVIDIA NIM...")
     all_ids = get_model_ids()
     name_filtered = [m for m in all_ids if name_filter(m)]
@@ -93,3 +92,7 @@ if __name__ == "__main__":
         snapshot_path=SNAPSHOT_PATH,
         source_url=MODELS_URL,
     )
+
+
+if __name__ == "__main__":
+    run()

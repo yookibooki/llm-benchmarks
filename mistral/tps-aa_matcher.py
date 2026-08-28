@@ -44,7 +44,7 @@ MANUAL_INTELLIGENCE: dict[str, int] = {
 }
 
 
-if __name__ == "__main__":
+def _main():
     match_provider(
         "mistral/data/tps.csv",
         normalize=normalize_slug,
@@ -53,3 +53,7 @@ if __name__ == "__main__":
         models_path="mistral/data/models.txt",
         provider_name="mistral",
     )
+
+
+if __name__ == "__main__":
+    _main()

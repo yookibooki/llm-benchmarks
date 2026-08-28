@@ -25,7 +25,7 @@ EXCLUDE_TERMS = [
 SMALL_MODEL_PATTERNS = ["-1b-", "-1b.", "-1.2b-", "-1.3b-", "-2b-", "-2b."]
 
 
-def fetch_free_model_ids() -> list[str]:
+def get_model_ids() -> list[str]:
     key = require_api_key("openrouter", "OPENROUTER_API_KEY")
     resp = httpx.get(MODELS_URL, headers={"Authorization": f"Bearer {key}"}, timeout=30)
     resp.raise_for_status()
@@ -53,13 +53,17 @@ def name_filter(model_id: str) -> bool:
     return True
 
 
-if __name__ == "__main__":
+def run() -> None:
     print("Fetching free models from OpenRouter...")
     gate_and_write(
         "OpenRouter",
-        model_ids=fetch_free_model_ids(),
+        model_ids=get_model_ids(),
         output_path=OUTPUT_PATH,
         snapshot_path=SNAPSHOT_PATH,
         source_url=MODELS_URL,
         name_filter=name_filter,
     )
+
+
+if __name__ == "__main__":
+    run()

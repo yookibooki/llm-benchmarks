@@ -1,7 +1,7 @@
 import csv
 import os
 import sys
-import time
+from shared.benchmark import BenchmarkResult
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -10,28 +10,27 @@ PROVIDERS: dict[str, dict] = {
     "nvidia": {
         "base_url": "https://integrate.api.nvidia.com/v1",
         "api_env_var": "NVIDIA_API_KEY",
-        "api_kind": "chat",
     },
     "openrouter": {
         "base_url": "https://openrouter.ai/api/v1",
         "api_env_var": "OPENROUTER_API_KEY",
-        "api_kind": "chat",
         "default_headers": {"HTTP-Referer": "https://github.com/yookibooki/llm-benchmarks"},
     },
     "google": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
         "api_env_var": "GOOGLE_API_KEY",
-        "api_kind": "chat",
     },
     "mistral": {
         "base_url": "https://api.mistral.ai/v1",
         "api_env_var": "MISTRAL_API_KEY",
-        "api_kind": "chat",
     },
     "nous": {
         "base_url": "https://inference-api.nousresearch.com/v1",
         "api_env_var": "NOUS_API_KEY",
-        "api_kind": "chat",
+    },
+    "opencode": {
+        "base_url": "https://opencode.ai/zen/v1",
+        "api_env_var": "OPENCODE_API_KEY",
     },
 }
 
@@ -46,21 +45,24 @@ def load_model_ids(models_path: str) -> list[str]:
     return ids
 
 
-def _load_intelligence(output_path: str) -> dict[str, str]:
+def _load_existing_rows(output_path: str) -> list[dict]:
     if not os.path.exists(output_path):
-        return {}
+        return []
     with open(output_path, newline="") as f:
-        return {
-            r["Model"]: r["Intelligence"]
-            for r in csv.DictReader(f)
-            if r.get("Intelligence") not in ("", "-", None)
-        }
+        return list(csv.DictReader(f))
+
+
+def _load_intelligence(output_path: str) -> dict[str, str]:
+    return {
+        r["Model"]: r["Intelligence"]
+        for r in _load_existing_rows(output_path)
+        if r.get("Intelligence") not in ("", "-", None)
+    }
 
 
 def _benchmark_with_retry(
     model_id: str,
     provider: str,
-    api_kind: str,
     client,
     max_attempts: int = 3,
 ):
@@ -70,7 +72,7 @@ def _benchmark_with_retry(
     result = None
     for attempt in range(max_attempts):
         result = benchmark(
-            model_id=model_id, client=client, provider=provider, api_kind=api_kind,
+            model_id=model_id, client=client, provider=provider,
         )
         if result.error is None:
             return result
@@ -90,19 +92,17 @@ def _benchmark_with_retry(
     return result
 
 
-def run_provider_benchmark(*, provider: str) -> None:
+def run_provider_benchmark(*, provider: str, models_path: str | None = None) -> None:
     from openai import OpenAI
-    from shared.benchmark import benchmark
     from shared.config import require_api_key
     from shared.csv_utils import write_benchmark_csv
 
     cfg = PROVIDERS.get(provider)
     if cfg is None:
         sys.exit(f"Unknown provider '{provider}'. Add it to shared.provider.PROVIDERS.")
-    if cfg["api_kind"] not in ("chat", "responses"):
-        sys.exit(f"Provider '{provider}' has invalid api_kind '{cfg['api_kind']}'.")
 
-    models_path = str(REPO_ROOT / provider / "data" / "models.txt")
+
+    models_path = models_path or str(REPO_ROOT / provider / "data" / "models.txt")
     output_path = str(REPO_ROOT / provider / "data" / "tps.csv")
 
     key = require_api_key(provider, cfg["api_env_var"])
@@ -118,12 +118,14 @@ def run_provider_benchmark(*, provider: str) -> None:
 
     print(f"Starting benchmark for {len(model_ids)} models...", flush=True)
 
+    existing_rows = _load_existing_rows(output_path)
     existing_intelligence = _load_intelligence(output_path)
 
-    results = []
+    results = [BenchmarkResult.from_row(r) for r in existing_rows]
+
     for model_id in model_ids:
         result = _benchmark_with_retry(
-            model_id, provider, cfg["api_kind"], client,
+            model_id, provider, client,
         )
         results.append(result)
         write_benchmark_csv(output_path, results, existing_intelligence)

@@ -17,7 +17,7 @@ KEEP_MODELS = [
 ]
 
 
-def fetch_chat_models() -> list[str]:
+def get_model_ids() -> list[str]:
     key = require_api_key("google", "GOOGLE_API_KEY")
     resp = httpx.get(MODELS_URL, headers={"x-goog-api-key": key}, timeout=30)
     resp.raise_for_status()
@@ -33,12 +33,20 @@ def fetch_chat_models() -> list[str]:
     return sorted(chat_models)
 
 
-if __name__ == "__main__":
+def name_filter(model_id: str) -> bool:
+    return True
+
+
+def run() -> None:
     print("Fetching models from Google AI Studio...")
     gate_and_write(
         "Google",
-        model_ids=fetch_chat_models(),
+        model_ids=get_model_ids(),
         output_path=OUTPUT_PATH,
         snapshot_path=SNAPSHOT_PATH,
         source_url=MODELS_URL,
     )
+
+
+if __name__ == "__main__":
+    run()
