@@ -14,24 +14,23 @@ def normalize_slug(slug: str) -> str:
     return s
 
 
-MANUAL_OVERRIDES: dict[str, str | None] = {
-	"cohere/north-mini-code:free": "north-mini-code",
-	"google/gemma-4-26b-a4b-it:free": "gemma-4-26b-a4b",
-	"inclusionai/ling-3.0-tiny:free": "ling-3-0-tiny",
-	"liquid/lfm-2.5-2.6b:free": "lfm2-5-2-6b",
-	"minimax/minimax-m2.7:free": "minimax-m2-7",
-	"minimax/minimax-m3:free": "minimax-m3",
-	"nvidia/nemotron-3-nano-30b-a3b:free": "nvidia-nemotron-3-nano-30b-a3b",
-	"nvidia/nemotron-3-super-120b-a12b:free": "nvidia-nemotron-3-super-120b-a12b",
-	"nvidia/nemotron-3-ultra-550b-a55b:free": "nvidia-nemotron-3-ultra-550b-a55b",
-	"nvidia/nemotron-3.5-lightning:free": "nemotron-3-5-lightning",
-	"openai/gpt-oss-20b:free": "gpt-oss-20b",
-	"thinkingmachines/inkling-small:free": "inkling-small",
-	"thinkingmachines/inkling:free": "inkling",
-	"z-ai/glm-5.2:free": "glm-5-2",
+SLUG_OVERRIDES: dict[str, str] = {
+    "cohere/north-mini-code:free": "north-mini-code",
+    "google/gemma-4-26b-a4b-it:free": "gemma-4-26b-a4b",
+    "inclusionai/ling-3.0-flash-fin:free": "ling-3-0-flash",
+    "liquid/lfm-2.5-2.6b:free": "lfm2-5-2-6b",
+    "minimax/minimax-m2.7:free": "minimax-m2-7",
+    "minimax/minimax-m3:free": "minimax-m3",
+    "nvidia/nemotron-3-super-120b-a12b:free": "nvidia-nemotron-3-super-120b-a12b",
+    "nvidia/nemotron-3-ultra-550b-a55b:free": "nvidia-nemotron-3-ultra-550b-a55b",
+    "nvidia/nemotron-3.5-lightning:free": "nemotron-3-5-lightning",
+    "openai/gpt-oss-20b:free": "gpt-oss-20b",
+    "thinkingmachines/inkling-small:free": "inkling-small",
+    "thinkingmachines/inkling:free": "inkling",
+    "z-ai/glm-5.2:free": "glm-5-2",
 }
 
-MANUAL_INTELLIGENCE: dict[str, int] = {
+SLUG_INTELLIGENCE: dict[str, int] = {
     "dots-studio/dots-3-note-preview:free": 43,
 }
 
@@ -40,8 +39,7 @@ def _main():
     match_provider(
         "openrouter/data/tps.csv",
         normalize=normalize_slug,
-        overrides=MANUAL_OVERRIDES,
-        manual_intel=MANUAL_INTELLIGENCE,
+        manual_intel={**SLUG_OVERRIDES, **SLUG_INTELLIGENCE},
         models_path="openrouter/data/models.txt",
         provider_name="openrouter",
     )

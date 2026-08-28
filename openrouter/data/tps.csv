@@ -2,7 +2,7 @@ Model,Provider,Intelligence,Latency,TPS
 cohere/north-mini-code:free,openrouter,21,4.5,226
 dots-studio/dots-3-note-preview:free,openrouter,43,-,-
 google/gemma-4-26b-a4b-it:free,openrouter,27,-,-
-inclusionai/ling-3.0-flash-fin:free,openrouter,-,7.5,176
+inclusionai/ling-3.0-flash-fin:free,openrouter,38,7.5,176
 liquid/lfm-2.5-2.6b:free,openrouter,11,0.3,712
 minimax/minimax-m2.7:free,openrouter,39,-,-
 minimax/minimax-m3:free,openrouter,46,0.0,95

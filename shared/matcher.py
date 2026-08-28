@@ -93,36 +93,10 @@ def write_rows(tps_path: str, rows: list[dict]) -> None:
         writer.writerows(rows)
 
 
-def check_duplicate_targets(overrides: dict[str, str | None]) -> None:
-    targets: dict[str, list[str]] = {}
-    for key, target in overrides.items():
-        if target is None:
-            continue
-        targets.setdefault(target, []).append(key)
-    for target, keys in targets.items():
-        if len(keys) > 1:
-            print(f"  [warn] MANUAL_OVERRIDES: {keys} all map to '{target}' — verify this isn't a copy-paste error", file=sys.stderr)
-
-
-_MISSING = object()
-
-
-def _lookup_override(overrides, model, strip_namespace):
-    if model in overrides:
-        return overrides[model]
-    if strip_namespace and "/" in model:
-        slug = model.split("/", 1)[1]
-        if slug in overrides:
-            return overrides[slug]
-    return _MISSING
-
-
-def match_provider(tps_path: str, *, normalize, overrides: dict[str, str | None] | None = None, manual_intel: dict[str, int] | None = None, strip_namespace: bool = False, expected_creator=None, models_path: str | None = None, provider_name: str | None = None, aa_path: str | None = None) -> None:
+def match_provider(tps_path: str, *, normalize, manual_intel: dict[str, str | int] | None = None, models_path: str | None = None, provider_name: str | None = None, aa_path: str | None = None) -> None:
     manual_intel = manual_intel or {}
-    overrides = overrides or {}
     aa_index = load_aa_index() if aa_path is None else load_aa_index(aa_path)
     print(f"Loaded {len(aa_index)} AA models with intelligence + creator")
-    check_duplicate_targets(overrides)
     rows = read_rows(tps_path)
     if rows is None:
         rows = []
@@ -131,30 +105,25 @@ def match_provider(tps_path: str, *, normalize, overrides: dict[str, str | None]
     if not rows:
         print("No rows; nothing to do.")
         return
-    matched = unmatched = warned = skipped = 0
+    matched = unmatched = warned = 0
     for row in rows:
         model = row["Model"]
-        manual = manual_intel.get(model)
-        if manual is not None:
-            row["Intelligence"] = str(manual)
-            matched += 1
-            continue
-        ov = _lookup_override(overrides, model, strip_namespace)
-        if ov is not _MISSING:
-            if ov is None:
-                skipped += 1
-                row["Intelligence"] = "-"
+        key = model.split("/", 1)[1] if "/" in model else model
+        override = manual_intel.get(key, manual_intel.get(model))
+        if override is not None:
+            if isinstance(override, int):
+                row["Intelligence"] = str(override)
+                matched += 1
                 continue
-            entry = aa_index.get(ov)
+            entry = aa_index.get(override)
             if entry is not None:
                 row["Intelligence"] = str(math.ceil(entry["intelligence"]))
                 matched += 1
                 continue
-            print(f"  [warn] {model}: override '{ov}' not in AA")
+            print(f"  [warn] {model}: override '{override}' not in AA")
             warned += 1
             row["Intelligence"] = "-"
             continue
-        key = model.split("/", 1)[1] if strip_namespace and "/" in model else model
         entry = aa_index.get(key)
         if entry is None:
             norm = normalize(key)
@@ -164,12 +133,7 @@ def match_provider(tps_path: str, *, normalize, overrides: dict[str, str | None]
             unmatched += 1
             row["Intelligence"] = "-"
             continue
-        if expected_creator is not None:
-            exp = expected_creator(model)
-            if exp and entry["creator"] != exp:
-                print(f"  [warn] {model}: creator mismatch ({exp} vs {entry['creator']})")
-                warned += 1
         row["Intelligence"] = str(math.ceil(entry["intelligence"]))
         matched += 1
     write_rows(tps_path, rows)
-    print(f"Updated {matched}/{len(rows)} models in {tps_path} (warned={warned}, unmatched={unmatched}, skipped={skipped})")
+    print(f"Updated {matched}/{len(rows)} models in {tps_path} (warned={warned}, unmatched={unmatched})")

@@ -56,12 +56,12 @@ def test_manual_intelligence_wins(repo):
     assert _read_intel(repo)["m1"] == "42"
 
 
-def test_override_used_when_set(repo):
+def test_manual_slug_override_wins(repo):
     import shared.matcher as m
 
-    aa = _aa_index_file(repo, [("target-slug", 33, "c")])
+    aa = _aa_index_file(repo, [("target-slug", 33, "c"), ("my-model", 20, "c")])
     tps = _write_tps(repo, [{"Model": "m1", "Provider": "p", "Intelligence": "", "Latency": "-", "TPS": "-"}])
-    m.match_provider(tps, normalize=lambda s: s, overrides={"m1": "target-slug"}, aa_path=aa)
+    m.match_provider(tps, normalize=lambda s: s, manual_intel={"m1": "target-slug"}, aa_path=aa)
     assert _read_intel(repo)["m1"] == "33"
 
 

@@ -12,15 +12,17 @@ def normalize_slug(slug: str) -> str:
         s = s + "-preview"
     return s
 
-MANUAL_OVERRIDES: dict[str, str] = {
+
+SLUG_OVERRIDES: dict[str, str] = {
     "gemini-3.5-flash-lite": "gemini-3-5-flash-lite",
 }
+
 
 def _main():
     match_provider(
         "google/data/tps.csv",
         normalize=normalize_slug,
-        overrides=MANUAL_OVERRIDES,
+        manual_intel=SLUG_OVERRIDES,
         models_path="google/data/models.txt",
         provider_name="google",
     )

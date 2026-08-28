@@ -116,9 +116,8 @@ def generate_rows_html(rows):
         intelligence = html.escape(r.get("Intelligence", "") or "-")
         latency = _fmt_number(r.get("Latency", ""))
         tps = _fmt_number(r.get("TPS", ""))
-        badge = f' class="provider-{provider}"' if provider else ""
         parts.append(
-            f"<tr><td>{model}</td><td{badge}>{provider}</td>"
+            f"<tr><td>{model}</td><td>{provider}</td>"
             f"<td>{intelligence}</td><td>{latency}</td><td>{tps}</td></tr>\n"
         )
     return "".join(parts)
@@ -140,13 +139,6 @@ th, td {{ padding: .4rem .6rem; border-bottom: 1px solid #333; }}
 th:first-child, td:first-child {{ text-align: right; }}
 th:not(:first-child), td:not(:first-child) {{ white-space: nowrap; text-align: center; }}
 th {{ background: #2a2a2a; cursor: pointer; }}
-.provider {{ font-size: .75rem; padding: .1rem .3rem; border-radius: 3px; }}
-.provider-nvidia {{ background: #76b900; color: #000; }}
-.provider-openrouter {{ background: #ff6b35; color: #000; }}
-.provider-google {{ background: #4285f4; color: #fff; }}
-.provider-mistral {{ background: #ff7000; color: #000; }}
-.provider-nous {{ background: #e74c3c; color: #fff; }}
-.provider-opencode {{ background: #9b59b6; color: #fff; }}
 </style>
 </head>
 <body>
