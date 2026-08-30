@@ -1,3 +1,4 @@
+inclusionai/ling-3.0-flash-fin:free
 meituan/longcat-2.0:free
 poolside/laguna-s-2.1:free
 poolside/laguna-xs-2.1:free
