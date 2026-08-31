@@ -12,3 +12,5 @@ nvidia/nemotron-3.5-lightning:free,openrouter,24,-,-
 thinkingmachines/inkling-small:free,openrouter,42,-,-
 thinkingmachines/inkling:free,openrouter,43,-,-
 z-ai/glm-5.2:free,openrouter,53,-,-
+cohere/north-mini-code:free,openrouter,21,-,-
+dots-studio/dots-3-note-preview:free,openrouter,43,-,-

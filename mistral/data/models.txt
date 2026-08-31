@@ -1,12 +1,9 @@
 codestral-latest
-devstral-latest
-devstral-medium-latest
 magistral-medium-latest
 magistral-small-latest
 ministral-14b-latest
 ministral-3b-latest
 ministral-8b-latest
-mistral-code-agent-latest
 mistral-code-latest
 mistral-large-latest
 mistral-medium-3
