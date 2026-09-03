@@ -5,7 +5,6 @@ ministral-14b-latest
 ministral-3b-latest
 ministral-8b-latest
 mistral-code-latest
-mistral-large-latest
 mistral-medium-3
 mistral-medium-3-5
 mistral-medium-latest
