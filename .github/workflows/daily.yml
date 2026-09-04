@@ -12,11 +12,15 @@ permissions:
 
 concurrency:
   group: daily-benchmark
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  benchmark:
+  filter:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [nvidia, openrouter, google, mistral, nous, opencode]
     env:
       NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -24,6 +28,66 @@ jobs:
       MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
       NOUS_API_KEY: ${{ secrets.NOUS_API_KEY }}
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python3 -m pip install -r requirements.txt
+      - name: Filter ${{ matrix.provider }} models
+        run: python3 -m shared.pipeline --filter-only --provider ${{ matrix.provider }}
+
+  fetch-aa:
+    runs-on: ubuntu-latest
+    env:
+      AA_API_KEY: ${{ secrets.AA_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python3 -m pip install -r requirements.txt
+      - name: Fetch AA model data
+        run: python3 -m shared.pipeline --fetch-aa-only
+
+  benchmark:
+    needs: [filter]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [nvidia, openrouter, google, mistral, nous, opencode]
+    env:
+      NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+      NOUS_API_KEY: ${{ secrets.NOUS_API_KEY }}
+      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python3 -m pip install -r requirements.txt
+      - name: Run ${{ matrix.provider }} benchmark
+        run: |
+          DAY=$(date +%u)
+          if [ "$DAY" = "1" ]; then
+            echo "Monday: full re-benchmark of ${{ matrix.provider }}"
+            python3 -m shared.pipeline --benchmark-only --provider ${{ matrix.provider }} --full
+          else
+            echo "Incremental: benchmark ${{ matrix.provider }} new models"
+            python3 -m shared.pipeline --benchmark-only --provider ${{ matrix.provider }}
+          fi
+
+  match-render-deploy:
+    needs: [benchmark, fetch-aa]
+    runs-on: ubuntu-latest
+    env:
       AA_API_KEY: ${{ secrets.AA_API_KEY }}
     steps:
       - uses: actions/checkout@v7
@@ -33,16 +97,11 @@ jobs:
           cache: pip
       - run: python3 -m pip install -r requirements.txt
 
-      - name: Run pipeline (full re-benchmark on Monday, incremental otherwise)
-        run: |
-          DAY=$(date +%u)
-          if [ "$DAY" = "1" ]; then
-            echo "Monday: full re-benchmark of all models"
-            python3 -m shared.pipeline --full
-          else
-            echo "Incremental: benchmark only new models"
-            python3 -m shared.pipeline
-          fi
+      - name: Match all providers
+        run: python3 -m shared.pipeline --match-only
+
+      - name: Render leaderboard
+        run: python3 -m shared.pipeline --render-only
 
       - name: Commit data
         run: |

@@ -91,20 +91,20 @@ def fetch_aa() -> None:
     print(f"Fetched {lines} lines of AA data")
 
 
-def run_pipeline(full: bool) -> None:
+def run_pipeline(full: bool, providers: list[str] | None = None) -> None:
     from shared.provider import PROVIDERS
 
-    providers = list(PROVIDERS)
+    selected = list(providers) if providers is not None else list(PROVIDERS)
     failures: list[str] = []
 
-    for prov in providers:
+    for prov in selected:
         try:
             run_filter(prov)
         except Exception as e:
             print(f"WARNING: {prov} filter failed: {e}", file=sys.stderr)
             failures.append(f"{prov} filter: {e}")
 
-    for prov in providers:
+    for prov in selected:
         try:
             run_benchmark(prov, full)
         except Exception as e:
@@ -113,7 +113,7 @@ def run_pipeline(full: bool) -> None:
 
     fetch_aa()
 
-    for prov in providers:
+    for prov in selected:
         try:
             run_match(prov)
         except Exception as e:
@@ -133,6 +133,44 @@ def run_pipeline(full: bool) -> None:
         print(f"{len(failures)} provider step(s) failed — publishing with stale or partial data", file=sys.stderr)
 
 
+def _all_providers() -> list[str]:
+    from shared.provider import PROVIDERS
+
+    return list(PROVIDERS)
+
+
+def _parse_provider_arg(argv: list[str]) -> list[str] | None:
+    if "--provider" not in argv:
+        return None
+    idx = argv.index("--provider")
+    if idx + 1 >= len(argv):
+        sys.exit("--provider requires a value")
+    name = argv[idx + 1]
+    known = _all_providers()
+    if name not in known:
+        sys.exit(f"Unknown provider '{name}'. Known: {sorted(known)}")
+    return [name]
+
+
 if __name__ == "__main__":
-    full = "--full" in sys.argv
-    run_pipeline(full)
+    argv = sys.argv[1:]
+    full = "--full" in argv
+    providers = _parse_provider_arg(argv)
+
+    if "--filter-only" in argv:
+        for prov in providers or _all_providers():
+            run_filter(prov)
+    elif "--benchmark-only" in argv:
+        if providers is None:
+            sys.exit("--benchmark-only requires --provider")
+        for prov in providers:
+            run_benchmark(prov, full)
+    elif "--match-only" in argv:
+        for prov in providers or _all_providers():
+            run_match(prov)
+    elif "--render-only" in argv:
+        render()
+    elif "--fetch-aa-only" in argv:
+        fetch_aa()
+    else:
+        run_pipeline(full, providers)
