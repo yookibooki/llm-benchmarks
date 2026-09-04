@@ -2,7 +2,6 @@ import csv
 import os
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -30,6 +29,21 @@ def read_benchmark_csv(csv_path: str | Path) -> list[dict]:
         return []
     with open(csv_path) as f:
         return list(csv.DictReader(f))
+
+
+def has_measurements(row: dict) -> bool:
+    lat = row.get("Latency", "")
+    tps = row.get("TPS", "")
+    return lat not in ("", "-", None) and tps not in ("", "-", None)
+
+
+def latest_measured_row(rows: list[dict] | None) -> dict | None:
+    if not rows:
+        return None
+    measured = [r for r in rows if has_measurements(r)]
+    if measured:
+        return measured[-1]
+    return rows[-1]
 
 
 def merge_provider_csvs(provider_dirs: list[str | Path], output_path: str | Path) -> None:

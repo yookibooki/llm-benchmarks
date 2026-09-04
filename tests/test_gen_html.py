@@ -12,15 +12,12 @@ def test_fmt_number_formats_by_magnitude():
     assert g._fmt_number("123.4") == "123"
 
 
-def test_has_intelligence_and_measurements():
+def test_has_intelligence():
     import gen_html as g
 
     assert g._has_intelligence({"Intelligence": "5"}) is True
     assert g._has_intelligence({"Intelligence": "-"}) is False
     assert g._has_intelligence({"Intelligence": ""}) is False
-
-    assert g._has_measurements({"Latency": "1.0", "TPS": "50"}) is True
-    assert g._has_measurements({"Latency": "-", "TPS": "50"}) is False
 
 
 def test_build_sort_key_measured_beats_unmeasured_high_intel():
@@ -58,6 +55,7 @@ def test_reconcile_adds_missing_and_prunes_stale(tmp_path, monkeypatch):
     assert "newmodel" in models
     assert "stale" not in models
     assert "keep1" in models
+
 
 def test_reconcile_does_not_rewrite_merged_file(tmp_path, monkeypatch):
     import gen_html as g

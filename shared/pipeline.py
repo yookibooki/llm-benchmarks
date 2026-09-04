@@ -1,7 +1,10 @@
+import csv
 import importlib
 import os
 import sys
 from pathlib import Path
+
+from shared.csv_utils import has_measurements, latest_measured_row
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -24,28 +27,15 @@ def run_benchmark(provider: str, full: bool) -> None:
 
     print(f"--- {provider} benchmark (full={full}) ---")
     if not full:
-        models_path = REPO_ROOT / provider / "data" / "models.txt"
-        with open(models_path) as f:
-            current = {line.strip() for line in f if line.strip()}
         tps_path = REPO_ROOT / provider / "data" / "tps.csv"
-        existing: set[str] = set()
-        if tps_path.exists():
-            import csv
-
-            with open(tps_path, newline="") as f:
-                existing = {r["Model"] for r in csv.DictReader(f)}
-        new = current - existing
-        if not new:
-            print(f"  no new models; skipping benchmark")
+        pending = _pending_models(REPO_ROOT / provider / "data" / "models.txt", tps_path)
+        if not pending:
+            print("  no models lacking measurements; skipping benchmark")
             return
-        print(f"  benchmarking {len(new)} new models (keeping {len(current & existing)} existing rows)")
-        # Benchmark only the new models. run_provider_benchmark preserves
-        # existing tps.csv rows, and models.txt is left intact so the matcher
-        # and gen_html reconcile do not prune models that already have data.
+        print(f"  benchmarking {len(pending)} models lacking measurements")
         subset_path = REPO_ROOT / provider / "data" / "_benchmark_subset.txt"
         with open(subset_path, "w") as f:
-            for model_id in sorted(new):
-                f.write(f"{model_id}\n")
+            f.write("".join(f"{m}\n" for m in sorted(pending)))
         try:
             run_provider_benchmark(provider=provider, models_path=str(subset_path))
         finally:
@@ -53,10 +43,36 @@ def run_benchmark(provider: str, full: bool) -> None:
     else:
         run_provider_benchmark(provider=provider)
 
+
+def _pending_models(models_path: Path, tps_path: Path) -> list[str]:
+    with open(models_path) as f:
+        catalog = {line.strip() for line in f if line.strip()}
+    if not tps_path.exists():
+        return sorted(catalog)
+    grouped: dict[str, list[dict]] = {}
+    with open(tps_path, newline="") as f:
+        for row in csv.DictReader(f):
+            grouped.setdefault(row["Model"], []).append(row)
+    pending = set()
+    for model in catalog:
+        rows = grouped.get(model)
+        best = latest_measured_row(rows) if rows else None
+        if best is None or not has_measurements(best):
+            pending.add(model)
+    return sorted(pending)
+
+
 def run_match(provider: str) -> None:
     mm = _load_module(provider, "tps-aa_matcher")
     print(f"--- {provider} matcher ---")
     mm._main()
+
+
+def render() -> None:
+    import gen_html
+
+    print("--- rendering leaderboard ---")
+    gen_html.main()
 
 
 def fetch_aa() -> None:
@@ -103,6 +119,13 @@ def run_pipeline(full: bool) -> None:
         except Exception as e:
             print(f"WARNING: {prov} matcher failed: {e}", file=sys.stderr)
             failures.append(f"{prov} matcher: {e}")
+
+    try:
+        render()
+    except Exception as e:
+        print(f"WARNING: leaderboard render failed: {e}", file=sys.stderr)
+        failures.append(f"gen_html: {e}")
+
 
     if failures:
         for f in failures:

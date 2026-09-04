@@ -1,9 +1,9 @@
 import csv
 import json
 import math
-import os
-import sys
 from pathlib import Path
+
+from shared.csv_utils import latest_measured_row
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 AA_PATH = str(REPO_ROOT / "data" / "aa_raw.json")
@@ -82,7 +82,14 @@ def read_rows(tps_path: str) -> list[dict] | None:
     if not rows:
         print("No rows in tps.csv; nothing to do.")
         return None
-    return rows
+    grouped: dict[str, list[dict]] = {}
+    for row in rows:
+        grouped.setdefault(row["Model"], []).append(row)
+    deduped = [latest_measured_row(rs) for rs in grouped.values()]
+    dropped = len(rows) - len(deduped)
+    if dropped:
+        print(f"  Collapsed {dropped} duplicate model rows")
+    return deduped
 
 
 def write_rows(tps_path: str, rows: list[dict]) -> None:

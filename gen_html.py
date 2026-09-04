@@ -1,6 +1,5 @@
 import csv
 import html
-import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -9,7 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from shared.csv_utils import merge_provider_csvs
+from shared.csv_utils import has_measurements, merge_provider_csvs
 from shared.provider import PROVIDERS
 
 PROVIDER_NAMES = list(PROVIDERS)
@@ -26,12 +25,6 @@ def _int_or_float(v):
 def _has_intelligence(r):
     v = r.get("Intelligence", "")
     return v not in ("", "-", None)
-
-
-def _has_measurements(r):
-    lat = r.get("Latency", "")
-    tps = r.get("TPS", "")
-    return lat not in ("", "-") and tps not in ("", "-")
 
 
 def _fmt_number(v):
@@ -78,8 +71,6 @@ def reconcile_with_catalogs(all_rows):
         if r["Provider"] not in catalogs or r["Model"] in catalogs[r["Provider"]]
     ]
     return all_rows
-
-
 def validate_consistency(all_rows):
     for prov in PROVIDER_NAMES:
         models_path = REPO_ROOT / prov / "data" / "models.txt"
@@ -101,7 +92,7 @@ def build_sort_key(r):
     intelligence = _int_or_float(r["Intelligence"]) if _has_intelligence(r) else 0
     return (
         not _has_intelligence(r),
-        not _has_measurements(r),
+        not has_measurements(r),
         -intelligence,
         r.get("Provider", ""),
         r.get("Model", ""),

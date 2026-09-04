@@ -1,14 +1,8 @@
 codestral-latest
-magistral-medium-latest
 magistral-small-latest
 ministral-14b-latest
 ministral-3b-latest
 ministral-8b-latest
 mistral-code-latest
-mistral-medium-3
-mistral-medium-3-5
-mistral-medium-latest
 mistral-small-latest
 mistral-vibe-cli-fast
-mistral-vibe-cli-latest
-mistral-vibe-cli-with-tools

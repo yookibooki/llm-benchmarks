@@ -72,6 +72,16 @@ def test_write_benchmark_csv_preserves_intelligence(repo):
     assert rows[0]["TPS"] == "40"
 
 
+def test_has_measurements_requires_latency_and_tps():
+    from shared.csv_utils import has_measurements
+
+    assert has_measurements({"Latency": "1.0", "TPS": "50"}) is True
+    assert has_measurements({"Latency": "-", "TPS": "50"}) is False
+    assert has_measurements({"Latency": "1.0", "TPS": "-"}) is False
+    assert has_measurements({"Latency": "", "TPS": ""}) is False
+    assert has_measurements({}) is False
+
+
 def test_read_benchmark_csv_missing_returns_empty(repo):
     from shared.csv_utils import read_benchmark_csv
 

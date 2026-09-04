@@ -1,8 +1,11 @@
 import csv
 import os
 import sys
-from shared.benchmark import BenchmarkResult
+import time
 from pathlib import Path
+
+from shared.benchmark import BenchmarkResult
+from shared.csv_utils import latest_measured_row
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -60,6 +63,24 @@ def _load_intelligence(output_path: str) -> dict[str, str]:
     }
 
 
+def _keep_prior(results: list[BenchmarkResult], model_id: str, result) -> bool:
+    if result.error is None:
+        return False
+    return any(r.model == model_id and r.tps is not None for r in results)
+
+
+def _seed_results(existing_rows: list[dict]) -> list[BenchmarkResult]:
+    grouped: dict[str, list[dict]] = {}
+    for row in existing_rows:
+        grouped.setdefault(row["Model"], []).append(row)
+    seeded = []
+    for rows in grouped.values():
+        best = latest_measured_row(rows)
+        if best is not None:
+            seeded.append(BenchmarkResult.from_row(best))
+    return seeded
+
+
 def _benchmark_with_retry(
     model_id: str,
     provider: str,
@@ -101,7 +122,6 @@ def run_provider_benchmark(*, provider: str, models_path: str | None = None) -> 
     if cfg is None:
         sys.exit(f"Unknown provider '{provider}'. Add it to shared.provider.PROVIDERS.")
 
-
     models_path = models_path or str(REPO_ROOT / provider / "data" / "models.txt")
     output_path = str(REPO_ROOT / provider / "data" / "tps.csv")
 
@@ -121,12 +141,15 @@ def run_provider_benchmark(*, provider: str, models_path: str | None = None) -> 
     existing_rows = _load_existing_rows(output_path)
     existing_intelligence = _load_intelligence(output_path)
 
-    results = [BenchmarkResult.from_row(r) for r in existing_rows]
+    results = _seed_results(existing_rows)
 
     for model_id in model_ids:
         result = _benchmark_with_retry(
             model_id, provider, client,
         )
+        if _keep_prior(results, model_id, result):
+            continue
+        results = [r for r in results if r.model != model_id]
         results.append(result)
         write_benchmark_csv(output_path, results, existing_intelligence)
 
