@@ -1,5 +1,5 @@
 Model,Provider,Intelligence,Latency,TPS
-gemini-3.1-flash-lite,google,26,0.0,509
-gemini-3.5-flash-lite,google,38,0.0,528
-gemma-4-26b-a4b-it,google,27,0.0,16
-gemma-4-31b-it,google,30,0.0,29
+gemini-3.1-flash-lite,google,19,0.0,509
+gemini-3.5-flash-lite,google,28,0.0,528
+gemma-4-26b-a4b-it,google,20,0.0,16
+gemma-4-31b-it,google,23,0.0,29
