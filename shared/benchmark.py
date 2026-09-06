@@ -117,6 +117,15 @@ def _fail(
     )
 
 
+def _close_stream(stream) -> None:
+    try:
+        close = getattr(stream, "close", None)
+        if callable(close):
+            close()
+    except Exception:
+        pass
+
+
 def _run_benchmark(
     model_id: str,
     provider: str,
@@ -133,6 +142,15 @@ def _run_benchmark(
 
     chars = 0
     full_text: list[str] = []
+    expired = {"fired": False}
+
+    def _expire() -> None:
+        expired["fired"] = True
+        _close_stream(stream)
+
+    timer = threading.Timer(total_timeout, _expire)
+    timer.daemon = True
+    timer.start()
 
     try:
         with _total_timeout_guard(total_timeout):
@@ -146,7 +164,7 @@ def _run_benchmark(
                         f"No content within {hard_timeout}s",
                     )
 
-                if now > start + total_timeout:
+                if now > start + total_timeout or expired["fired"]:
                     return _fail(
                         model_id,
                         provider,
@@ -172,6 +190,11 @@ def _run_benchmark(
         return _fail(model_id, provider, str(e), exc=e)
     except Exception as e:
         return _fail(model_id, provider, str(e), exc=e)
+    finally:
+        timer.cancel()
+
+    if expired["fired"]:
+        return _fail(model_id, provider, f"Did not finish within {total_timeout}s")
 
     if not chars:
         return _fail(model_id, provider, "No content tokens received")

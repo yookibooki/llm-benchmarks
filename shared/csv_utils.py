@@ -17,10 +17,12 @@ def write_benchmark_csv(output_path: str | Path, results: list, intelligence: di
         intelligence = {}
     output_path = _resolve(output_path)
     os.makedirs(output_path.parent, exist_ok=True)
-    with open(output_path, "w", newline="") as f:
+    tmp_path = output_path.with_suffix(output_path.suffix + ".tmp")
+    with open(tmp_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["Model", "Provider", "Intelligence", "Latency", "TPS"])
         writer.writerows(r.row(intelligence) for r in results)
+    os.replace(tmp_path, output_path)
 
 
 def read_benchmark_csv(csv_path: str | Path) -> list[dict]:
@@ -58,8 +60,10 @@ def merge_provider_csvs(provider_dirs: list[str | Path], output_path: str | Path
     fieldnames = ["Model", "Provider", "Intelligence", "Latency", "TPS"]
     output_path = _resolve(output_path)
     os.makedirs(output_path.parent, exist_ok=True)
-    with open(output_path, "w", newline="") as f:
+    tmp_path = output_path.with_suffix(output_path.suffix + ".tmp")
+    with open(tmp_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(all_rows)
+    os.replace(tmp_path, output_path)
     print(f"Merged {len(all_rows)} rows from {len(provider_dirs)} providers into {output_path}")

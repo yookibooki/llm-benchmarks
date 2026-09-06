@@ -130,7 +130,7 @@ def run_provider_benchmark(*, provider: str, models_path: str | None = None) -> 
         "base_url": cfg["base_url"],
         "api_key": key,
         "timeout": 60.0,
-        "max_retries": 3,
+        "max_retries": 0,
         "default_headers": cfg.get("default_headers") or {},
     }
     client = OpenAI(**client_kwargs)

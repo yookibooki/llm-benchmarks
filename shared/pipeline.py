@@ -54,7 +54,10 @@ def _pending_models(models_path: Path, tps_path: Path) -> list[str]:
     grouped: dict[str, list[dict]] = {}
     with open(tps_path, newline="") as f:
         for row in csv.DictReader(f):
-            grouped.setdefault(row["Model"], []).append(row)
+            name = row.get("Model")
+            if not name:
+                continue
+            grouped.setdefault(name, []).append(row)
     pending = set()
     for model in catalog:
         rows = grouped.get(model)
@@ -85,8 +88,12 @@ def fetch_aa() -> None:
     import httpx
 
     print("--- fetching AA model data ---")
-    resp = httpx.get(AA_URL, headers={"x-api-key": key}, timeout=60)
-    resp.raise_for_status()
+    try:
+        resp = httpx.get(AA_URL, headers={"x-api-key": key}, timeout=60)
+        resp.raise_for_status()
+    except Exception as e:
+        print(f"  WARNING: AA fetch failed: {e}; using stale data", file=sys.stderr)
+        return
     AA_RAW_PATH.parent.mkdir(parents=True, exist_ok=True)
     AA_RAW_PATH.write_text(resp.text)
     lines = resp.text.count("\n") + 1
@@ -96,6 +103,9 @@ def fetch_aa() -> None:
 def _run_step(step, label: str, provider: str) -> str | None:
     try:
         step(provider)
+    except SystemExit as e:
+        print(f"WARNING: {provider} {label} failed: {e}", file=sys.stderr)
+        return f"{provider} {label}: {e}"
     except Exception as e:
         print(f"WARNING: {provider} {label} failed: {e}", file=sys.stderr)
         return f"{provider} {label}: {e}"
@@ -138,6 +148,9 @@ def run_pipeline(full: bool, providers: list[str] | None = None) -> None:
 
     try:
         render()
+    except SystemExit as e:
+        print(f"WARNING: leaderboard render failed: {e}", file=sys.stderr)
+        failures.append(f"gen_html: {e}")
     except Exception as e:
         print(f"WARNING: leaderboard render failed: {e}", file=sys.stderr)
         failures.append(f"gen_html: {e}")

@@ -1,6 +1,7 @@
 import csv
 import json
 import math
+import os
 from pathlib import Path
 
 from shared.csv_utils import latest_measured_row
@@ -84,7 +85,10 @@ def read_rows(tps_path: str) -> list[dict] | None:
         return None
     grouped: dict[str, list[dict]] = {}
     for row in rows:
-        grouped.setdefault(row["Model"], []).append(row)
+        name = row.get("Model")
+        if not name:
+            continue
+        grouped.setdefault(name, []).append(row)
     deduped = [latest_measured_row(rs) for rs in grouped.values()]
     dropped = len(rows) - len(deduped)
     if dropped:
@@ -94,10 +98,13 @@ def read_rows(tps_path: str) -> list[dict] | None:
 
 def write_rows(tps_path: str, rows: list[dict]) -> None:
     fieldnames = list(rows[0].keys())
-    with open(tps_path, "w", newline="") as f:
+    path = _resolve(tps_path)
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    with open(tmp_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+    os.replace(tmp_path, path)
 
 
 def match_provider(tps_path: str, *, normalize, manual_intel: dict[str, str | int] | None = None, models_path: str | None = None, provider_name: str | None = None, aa_path: str | None = None) -> None:
@@ -125,6 +132,14 @@ def match_provider(tps_path: str, *, normalize, manual_intel: dict[str, str | in
             entry = aa_index.get(override)
             if entry is not None:
                 row["Intelligence"] = str(math.ceil(entry["intelligence"]))
+                matched += 1
+                continue
+            fallback = aa_index.get(key)
+            if fallback is None:
+                norm = normalize(key)
+                fallback = aa_index.get(norm)
+            if fallback is not None:
+                row["Intelligence"] = str(math.ceil(fallback["intelligence"]))
                 matched += 1
                 continue
             print(f"  [warn] {model}: override '{override}' not in AA")

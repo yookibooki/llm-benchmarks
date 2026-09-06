@@ -48,7 +48,8 @@ def name_filter(model_id: str) -> bool:
     lower = model_id.lower()
     if any(term in lower for term in EXCLUDE_TERMS):
         return False
-    if any(pat in lower for pat in SMALL_MODEL_PATTERNS):
+    normalized = lower.replace(":", "-")
+    if any(pat in normalized for pat in SMALL_MODEL_PATTERNS):
         return False
     return True
 
