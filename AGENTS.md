@@ -24,7 +24,7 @@ uv run gen_html.py                   # rebuild leaderboard
 
 ## Pipeline (daily.yml)
 
-Refresh AA data → filter → benchmark → match → render (`gen_html.main()` called from `run_pipeline()`), then CI commits + deploys. All 6 providers run sequentially with per-step exception collection in `shared/pipeline.py`: a failed provider step logs a `::warning::` and the pipeline publishes with stale/partial data. Incremental runs (non-Monday) benchmark only models whose latest CSV row lacks Latency/TPS; Monday runs (`--full`) re-benchmark everything. Benchmarks write incrementally per model; transient errors retried ×3 with backoff.
+Refresh AA data → filter → benchmark → match → render (`gen_html.main()` called from `run_pipeline()`), then CI commits + deploys. All 6 providers run concurrently (one thread per provider per step, via `ThreadPoolExecutor`) with per-step exception collection in `shared/pipeline.py`: a failed provider step logs a `::warning::` and the pipeline publishes with stale/partial data. Steps run in phase order (filter → benchmark → AA fetch → match → render); step-only CLI modes (`--filter-only`, `--benchmark-only`, `--match-only`) parallelize providers the same way but crash on error. Incremental runs (non-Monday) benchmark only models whose latest CSV row lacks Latency/TPS; Monday runs (`--full`) re-benchmark everything. Benchmarks write incrementally per model; transient errors retried ×3 with backoff.
 
 ### Add a provider
 

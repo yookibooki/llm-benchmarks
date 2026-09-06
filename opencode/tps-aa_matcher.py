@@ -17,6 +17,7 @@ def normalize_slug(slug: str) -> str:
 SLUG_OVERRIDES: dict[str, str] = {
     "mimo-v2.5-free": "mimo-v2-5-0424",
     "muse-spark-1.2-contributor-free": "muse-spark-1-2",
+    "muse-spark-1.3-contributor-free": "muse-spark-1-3",
     "nemotron-3-ultra-free": "nvidia-nemotron-3-ultra-550b-a55b",
 }
 

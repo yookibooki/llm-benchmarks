@@ -2,6 +2,8 @@ import csv
 import importlib
 import os
 import sys
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from pathlib import Path
 
 from shared.csv_utils import has_measurements, latest_measured_row
@@ -91,34 +93,48 @@ def fetch_aa() -> None:
     print(f"Fetched {lines} lines of AA data")
 
 
+def _run_step(step, label: str, provider: str) -> str | None:
+    try:
+        step(provider)
+    except Exception as e:
+        print(f"WARNING: {provider} {label} failed: {e}", file=sys.stderr)
+        return f"{provider} {label}: {e}"
+    return None
+
+
+def _run_step_parallel(step, providers: list[str], label: str) -> list[str]:
+    if len(providers) <= 1:
+        results = [_run_step(step, label, p) for p in providers]
+    else:
+        with ThreadPoolExecutor(max_workers=len(providers)) as ex:
+            futures = [ex.submit(_run_step, step, label, p) for p in providers]
+            results = [f.result() for f in futures]
+    return [f for f in results if f]
+
+
+def _run_step_all(step, providers: list[str]) -> None:
+    if len(providers) <= 1:
+        for p in providers:
+            step(p)
+        return
+    with ThreadPoolExecutor(max_workers=len(providers)) as ex:
+        futures = [ex.submit(step, p) for p in providers]
+        for f in futures:
+            f.result()
+
+
 def run_pipeline(full: bool, providers: list[str] | None = None) -> None:
     from shared.provider import PROVIDERS
 
     selected = list(providers) if providers is not None else list(PROVIDERS)
     failures: list[str] = []
 
-    for prov in selected:
-        try:
-            run_filter(prov)
-        except Exception as e:
-            print(f"WARNING: {prov} filter failed: {e}", file=sys.stderr)
-            failures.append(f"{prov} filter: {e}")
-
-    for prov in selected:
-        try:
-            run_benchmark(prov, full)
-        except Exception as e:
-            print(f"WARNING: {prov} benchmark failed: {e}", file=sys.stderr)
-            failures.append(f"{prov} benchmark: {e}")
+    failures += _run_step_parallel(run_filter, selected, "filter")
+    failures += _run_step_parallel(partial(run_benchmark, full=full), selected, "benchmark")
 
     fetch_aa()
 
-    for prov in selected:
-        try:
-            run_match(prov)
-        except Exception as e:
-            print(f"WARNING: {prov} matcher failed: {e}", file=sys.stderr)
-            failures.append(f"{prov} matcher: {e}")
+    failures += _run_step_parallel(run_match, selected, "matcher")
 
     try:
         render()
@@ -158,16 +174,13 @@ if __name__ == "__main__":
     providers = _parse_provider_arg(argv)
 
     if "--filter-only" in argv:
-        for prov in providers or _all_providers():
-            run_filter(prov)
+        _run_step_all(run_filter, providers or _all_providers())
     elif "--benchmark-only" in argv:
         if providers is None:
             sys.exit("--benchmark-only requires --provider")
-        for prov in providers:
-            run_benchmark(prov, full)
+        _run_step_all(partial(run_benchmark, full=full), providers)
     elif "--match-only" in argv:
-        for prov in providers or _all_providers():
-            run_match(prov)
+        _run_step_all(run_match, providers or _all_providers())
     elif "--render-only" in argv:
         render()
     elif "--fetch-aa-only" in argv:
